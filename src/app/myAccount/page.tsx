@@ -8,7 +8,7 @@ const myAccountPage = () => {
 
   return (
     <div>
-      <h1>My Accounsdt </h1>
+      <h1>My Account </h1>
 
     </div>
   );
