@@ -1,6 +1,9 @@
 import Image from "next/image";
 import styles from "./page.module.css";
-
+import {
+    DocumentHeadTags,
+    documentGetInitialProps,
+ } from '@mui/material-nextjs/v15-pagesRouter';
 export default function Home() {
   return (
     <div className={styles.page}>
