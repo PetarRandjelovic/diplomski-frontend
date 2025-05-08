@@ -16,7 +16,7 @@ const HomePage = () => {
       try {
         const token = localStorage.getItem("authToken"); // Retrieve token from localStorage or context
         console.log(token);
-        const response = await fetch("http://localhost:8000/api/posts/all", {
+        const response = await fetch("http://localhost:8080/api/posts/all", {
           headers: {
             Authorization: `Bearer ${token}`, // Add Authorization header
           },
@@ -47,8 +47,8 @@ const HomePage = () => {
     router.push('/explore'); // Redirect to the sign-up route
   };
 
-  const handleMessages = () => {
-    router.push('/messages'); // Redirect to the sign-up route
+  const handleChat = () => {
+    router.push('/chat'); // Redirect to the sign-up route
   };
 
   return (
@@ -62,7 +62,7 @@ const HomePage = () => {
           <Button color="inherit" onClick={handleHome}>Home</Button>
           <Button color="inherit" onClick={handleMyAccount}>My Account</Button>
           <Button color="inherit" onClick={handleExplore}>Explore</Button>
-          <Button color="inherit" onClick={handleMessages}>Messages</Button>
+          <Button color="inherit" onClick={handleChat}>Chat</Button>
         </Toolbar>
       </AppBar>
 

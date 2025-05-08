@@ -21,6 +21,9 @@ const LoginPage = () => {
         // Handle successful login, e.g., save token, redirect
 
         localStorage.setItem('authToken', response.token);
+       
+        localStorage.setItem('userEmail', email); // or dynamic
+
 
        router.push('/home'); 
       }
