@@ -51,6 +51,14 @@ const HomePage = () => {
     router.push('/chat'); // Redirect to the sign-up route
   };
 
+  const handleCreatePost = () => {
+    router.push('/posts/create');
+  };
+
+  const handlePostClick = (postId: number) => {
+    router.push(`/posts/${postId}`);
+  };
+
   return (
     <ThemeProvider theme={darkTheme}>
       {/* Menu Bar */}
@@ -63,6 +71,7 @@ const HomePage = () => {
           <Button color="inherit" onClick={handleMyAccount}>My Account</Button>
           <Button color="inherit" onClick={handleExplore}>Explore</Button>
           <Button color="inherit" onClick={handleChat}>Chat</Button>
+          <Button color="inherit" onClick={handleCreatePost}>Create Post</Button>
         </Toolbar>
       </AppBar>
 
@@ -71,7 +80,20 @@ const HomePage = () => {
         {error && <Typography color="error">{error}</Typography>}
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
           {posts.map((post) => (
-            <Card key={post.id} sx={{ backgroundColor: "background.paper", color: "text.primary" }}>
+            <Card 
+              key={post.id} 
+              sx={{ 
+                backgroundColor: "background.paper", 
+                color: "text.primary",
+                cursor: 'pointer',
+                '&:hover': {
+                  boxShadow: 6,
+                  transform: 'translateY(-2px)',
+                  transition: 'all 0.2s ease-in-out'
+                }
+              }}
+              onClick={() => handlePostClick(post.id)}
+            >
               <CardContent>
                 <Typography variant="h6" gutterBottom>
                   {post.content}
