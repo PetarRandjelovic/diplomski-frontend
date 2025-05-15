@@ -1,10 +1,8 @@
 'use client';
 import { useEffect, useState } from "react";
 import { PostDto } from "../dtos/postDto";
-import { ThemeProvider } from "@mui/material/styles";
-import { AppBar, Toolbar, Typography, Container, Box, Button, Card, CardContent, Chip } from "@mui/material";
-import darkTheme from "@/themes/darkTheme";
 import { useRouter } from "next/navigation";
+import { Container, Row, Col, Card, Button, Alert, Badge, Navbar, Nav } from 'react-bootstrap';
 
 const HomePage = () => {
   const [posts, setPosts] = useState<PostDto[]>([]);
@@ -14,11 +12,10 @@ const HomePage = () => {
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const token = localStorage.getItem("authToken"); // Retrieve token from localStorage or context
-        console.log(token);
+        const token = localStorage.getItem("authToken");
         const response = await fetch("http://localhost:8080/api/posts/all", {
           headers: {
-            Authorization: `Bearer ${token}`, // Add Authorization header
+            Authorization: `Bearer ${token}`,
           },
         });
         if (!response.ok) {
@@ -30,93 +27,53 @@ const HomePage = () => {
         setError((err as Error).message);
       }
     };
-
     fetchPosts();
   }, []);
-  
-  const handleHome = () => {
-    router.push('/home'); // Redirect to the sign-up route
-  };
 
-
-  const handleMyAccount = () => {
-    router.push('/myAccount'); // Redirect to the sign-up route
-  };
-
-  const handleExplore = () => {
-    router.push('/explore'); // Redirect to the sign-up route
-  };
-
-  const handleChat = () => {
-    router.push('/chat'); // Redirect to the sign-up route
-  };
-
-  const handleCreatePost = () => {
-    router.push('/posts/create');
-  };
-
-  const handlePostClick = (postId: number) => {
-    router.push(`/posts/${postId}`);
-  };
+  const handleHome = () => router.push('/home');
+  const handleMyAccount = () => router.push('/edit-account');
+  const handleExplore = () => router.push('/explore');
+  const handleChat = () => router.push('/chat');
+  const handleCreatePost = () => router.push('/posts/create');
+  const handlePostClick = (postId: number) => router.push(`/posts/${postId}`);
 
   return (
-    <ThemeProvider theme={darkTheme}>
-      {/* Menu Bar */}
-      <AppBar position="static" sx={{ mb: 4 }}>
-        <Toolbar>
-          <Typography variant="h6" sx={{ flexGrow: 1 }}>
-            My App
-          </Typography>
-          <Button color="inherit" onClick={handleHome}>Home</Button>
-          <Button color="inherit" onClick={handleMyAccount}>My Account</Button>
-          <Button color="inherit" onClick={handleExplore}>Explore</Button>
-          <Button color="inherit" onClick={handleChat}>Chat</Button>
-          <Button color="inherit" onClick={handleCreatePost}>Create Post</Button>
-        </Toolbar>
-      </AppBar>
-
-      {/* Main Content */}
-      <Container maxWidth="md" sx={{ color: "text.primary" }}>
-        {error && <Typography color="error">{error}</Typography>}
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+    <div className="bg-dark min-vh-100">
+      <Navbar bg="dark" variant="dark" expand="md" className="mb-4 shadow">
+        <Container>
+          <Navbar.Brand className="fw-bold">My App</Navbar.Brand>
+          <Nav className="ms-auto">
+            <Nav.Link onClick={handleHome}>Home</Nav.Link>
+            <Nav.Link onClick={() => router.push('/my-account')}>My Account</Nav.Link>
+            <Nav.Link onClick={handleExplore}>Explore</Nav.Link>
+            <Nav.Link onClick={handleChat}>Chat</Nav.Link>
+            <Button variant="outline-light" className="ms-2" onClick={handleCreatePost}>Create Post</Button>
+          </Nav>
+        </Container>
+      </Navbar>
+      <Container>
+        {error && <Alert variant="danger">{error}</Alert>}
+        <Row className="g-4">
           {posts.map((post) => (
-            <Card 
-              key={post.id} 
-              sx={{ 
-                backgroundColor: "background.paper", 
-                color: "text.primary",
-                cursor: 'pointer',
-                '&:hover': {
-                  boxShadow: 6,
-                  transform: 'translateY(-2px)',
-                  transition: 'all 0.2s ease-in-out'
-                }
-              }}
-              onClick={() => handlePostClick(post.id)}
-            >
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  {post.content}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {`Posted by: ${post.userEmail} on ${new Date(post.creationDate).toLocaleString()}`}
-                </Typography>
-                <Box sx={{ mt: 1, display: "flex", gap: 1, flexWrap: "wrap" }}>
-                  {post.tags.map((tag) => (
-                    <Chip
-                      key={tag.id}
-                      label={tag.name}
-                      variant="outlined"
-                      sx={{ color: "primary.main", borderColor: "primary.main" }}
-                    />
-                  ))}
-                </Box>
-              </CardContent>
-            </Card>
+            <Col key={post.id} md={12}>
+              <Card bg="secondary" text="light" className="shadow-sm h-100" style={{ cursor: 'pointer' }} onClick={() => handlePostClick(post.id)}>
+                <Card.Body>
+                  <Card.Title>{post.content}</Card.Title>
+                  <Card.Subtitle className="mb-2 text-light small">
+                    Posted by: {post.userEmail} on {new Date(post.creationDate).toLocaleString()}
+                  </Card.Subtitle>
+                  <div className="mt-2">
+                    {post.tags.map((tag) => (
+                      <Badge bg="info" key={tag.id} className="me-2">{tag.name}</Badge>
+                    ))}
+                  </div>
+                </Card.Body>
+              </Card>
+            </Col>
           ))}
-        </Box>
+        </Row>
       </Container>
-    </ThemeProvider>
+    </div>
   );
 };
 

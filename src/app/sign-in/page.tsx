@@ -1,10 +1,8 @@
 'use client';
 import { useState } from "react";
 import { loginUser } from "@/services/auth";
-import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { Container, TextField, Button, Typography, Box, Alert } from '@mui/material';
-import theme from "@/themes/lightTheme";
 import { useRouter } from "next/navigation";
+import { Form, Button, Container, Alert, Card } from 'react-bootstrap';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -17,15 +15,9 @@ const LoginPage = () => {
     try {
       const response = await loginUser(email, password);
       if (response) {
-       // console.log('User logged in:', response);
-        // Handle successful login, e.g., save token, redirect
-
         localStorage.setItem('authToken', response.token);
-       
-        localStorage.setItem('userEmail', email); // or dynamic
-
-
-       router.push('/home'); 
+        localStorage.setItem('userEmail', email);
+        router.push('/home');
       }
     } catch (err) {
       setError((err as Error).message);
@@ -33,64 +25,48 @@ const LoginPage = () => {
   };
 
   const handleSignUpRedirect = () => {
-    router.push('/sign-up'); // Redirect to the sign-up route
+    router.push('/sign-up');
   };
 
   return (
-    <ThemeProvider theme={theme}>
-      <Container maxWidth="sm" sx={{ mt: 4 }}>
-        <Box
-          sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: 2,
-          }}
-        >
-          <Typography variant="h4" component="h1">
-            Login
-          </Typography>
-          {error && (
-            <Alert severity="error" sx={{ width: '100%' }}>
-              {error}
-            </Alert>
-          )}
-          <TextField
-            label="Email"
-            type="email"
-            variant="outlined"
-            fullWidth
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          <TextField
-            label="Password"
-            type="password"
-            variant="outlined"
-            fullWidth
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          <Button
-            variant="contained"
-            color="primary"
-            fullWidth
-            onClick={handleLogin}
-          >
-            Login
-          </Button>
-          <Button
-            variant="contained"
-            color="primary"
-            fullWidth
-            onClick={handleSignUpRedirect}
-          >
-            Create new account
-          </Button>
-        </Box>
-     
+    <div className="d-flex align-items-center justify-content-center min-vh-100 bg-dark">
+      <Container className="d-flex justify-content-center align-items-center">
+        <Card bg="dark" text="light" style={{ minWidth: 400, width: '100%', maxWidth: 500 }} className="shadow p-4">
+          <Card.Body>
+            <h2 className="mb-4 text-center">Login</h2>
+            {error && <Alert variant="danger">{error}</Alert>}
+            <Form>
+              <Form.Group className="mb-3" controlId="formEmail">
+                <Form.Label>Email</Form.Label>
+                <Form.Control
+                  type="email"
+                  placeholder="Enter email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  autoComplete="username"
+                />
+              </Form.Group>
+              <Form.Group className="mb-4" controlId="formPassword">
+                <Form.Label>Password</Form.Label>
+                <Form.Control
+                  type="password"
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="current-password"
+                />
+              </Form.Group>
+              <Button variant="primary" className="w-100 mb-2" onClick={handleLogin}>
+                Login
+              </Button>
+              <Button variant="secondary" className="w-100" onClick={handleSignUpRedirect}>
+                Create new account
+              </Button>
+            </Form>
+          </Card.Body>
+        </Card>
       </Container>
-    </ThemeProvider>
+    </div>
   );
 };
 

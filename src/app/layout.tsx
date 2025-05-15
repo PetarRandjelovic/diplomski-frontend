@@ -6,6 +6,7 @@ import { ReactElement, JSXElementConstructor, ReactNode, ReactPortal, AwaitedRea
 import { Roboto } from 'next/font/google';
 import { ThemeProvider } from '@mui/material/styles';
 import theme from '../themes/lightTheme';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 const roboto = Roboto({
   weight: ['300', '400', '500', '700'],
@@ -33,7 +34,7 @@ export const metadata: Metadata = {
 export default function RootLayout(props: { children: string | number | bigint | boolean | ReactElement<any, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<AwaitedReactNode> | null | undefined; }) {
   return (
     <html lang="en">
-<body className={roboto.variable}>
+<body className={roboto.variable} data-bs-theme="dark">
         <AppRouterCacheProvider>
         <ThemeProvider theme={theme}>
           {props.children}
