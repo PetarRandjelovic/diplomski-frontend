@@ -24,13 +24,11 @@ export const userService = {
         return response.data;
     },
 
-    async getFollowerCount(email: string): Promise<number> {
-        const response = await axios.get(`${API_URL}/relation/user-follower/${email}`);
-        return response.data;
-    },
-
-    async getFollowingCount(email: string): Promise<number> {
-        const response = await axios.get(`${API_URL}/relation/user-following/${email}`);
+    async getUserFriendsCount(email: string): Promise<number> {
+        const token = localStorage.getItem('authToken');
+        const response = await axios.get(`${API_URL}/relation/user-friends/${email}`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
         return response.data;
     },
 

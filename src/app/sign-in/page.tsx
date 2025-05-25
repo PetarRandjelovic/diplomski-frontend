@@ -17,6 +17,7 @@ const LoginPage = () => {
       if (response) {
         localStorage.setItem('authToken', response.token);
         localStorage.setItem('userEmail', email);
+        console.log(localStorage);
         router.push('/home');
       }
     } catch (err) {
