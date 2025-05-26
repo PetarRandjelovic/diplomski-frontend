@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { userService, UserDto } from '../../services/userService/userService';
 import { Card, Form, Button, Spinner, Alert, Container, Row, Col } from 'react-bootstrap';
-
+     console.log('localStorage', localStorage);
 const MyAccount: React.FC = () => {
     const [user, setUser] = useState<UserDto | null>(null);
     const [newUsername, setNewUsername] = useState('');
@@ -11,6 +11,7 @@ const MyAccount: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
+   
         const fetchUserData = async () => {
             try {
                 const email = localStorage.getItem('userEmail');
