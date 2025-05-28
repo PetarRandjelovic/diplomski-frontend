@@ -75,6 +75,7 @@ export default function MyAccount() {
           return;
         }
         const token = localStorage.getItem('authToken');
+        console.log(token);
         const res = await fetch(`http://localhost:8080/api/posts/email/${encodeURIComponent(userEmail)}`, {
           headers: { Authorization: `Bearer ${token}` }
         });

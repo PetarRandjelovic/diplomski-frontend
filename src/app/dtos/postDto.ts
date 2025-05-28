@@ -6,4 +6,5 @@ export interface PostDto {
     content: string;
     tags: TagDto[];
     creationDate: number;
-  }
+    likes: number;
+}

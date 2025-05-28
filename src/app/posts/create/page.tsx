@@ -1,28 +1,32 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ThemeProvider } from "@mui/material/styles";
-import { AppBar, Toolbar, Typography, Container, Box, Button, TextField, Chip } from "@mui/material";
+import { AppBar, Toolbar, Typography, Container, Box, Button, TextField, Chip, Autocomplete } from "@mui/material";
 import darkTheme from "@/themes/darkTheme";
+import { TagDto } from "@/app/dtos/tagDto";
 
 const CreatePostPage = () => {
   const [content, setContent] = useState("");
-  const [tags, setTags] = useState<string[]>([]);
-  const [tagInput, setTagInput] = useState("");
+  const [tags, setTags] = useState<TagDto[]>([]);
+  const [availableTags, setAvailableTags] = useState<TagDto[]>([]);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  const handleAddTag = () => {
-    if (tagInput.trim() && !tags.includes(tagInput.trim())) {
-      setTags([...tags, tagInput.trim()]);
-      setTagInput("");
-    }
-  };
-
-  const handleRemoveTag = (tagToRemove: string) => {
-    setTags(tags.filter((tag) => tag !== tagToRemove));
-  };
+  useEffect(() => {
+    const fetchTags = async () => {
+      try {
+        const response = await fetch("http://localhost:8080/api/tags/all");
+        if (!response.ok) throw new Error("Failed to fetch tags");
+        const data = await response.json();
+        setAvailableTags(data);
+      } catch (err) {
+        setError((err as Error).message);
+      }
+    };
+    fetchTags();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,7 +46,7 @@ const CreatePostPage = () => {
         body: JSON.stringify({
           userEmail,
           content,
-          tags: tags.map((tag) => ({ name: tag })),
+          tags: tags.map((tag) => ({ id: tag.id, name: tag.name })),
           creationDate: Date.now(),
         }),
       });
@@ -79,30 +83,69 @@ const CreatePostPage = () => {
             required
             sx={{ mb: 2 }}
           />
-          <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-            <TextField
-              label="Add Tag"
-              value={tagInput}
-              onChange={(e) => setTagInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  handleAddTag();
-                }
-              }}
-              sx={{ mr: 2 }}
-            />
-            <Button variant="outlined" onClick={handleAddTag}>Add Tag</Button>
-          </Box>
           <Box sx={{ mb: 2 }}>
-            {tags.map((tag) => (
-              <Chip
-                key={tag}
-                label={tag}
-                onDelete={() => handleRemoveTag(tag)}
-                sx={{ mr: 1, mb: 1 }}
-              />
-            ))}
+            <Autocomplete
+              multiple
+              id="tags"
+              options={availableTags}
+              getOptionLabel={(option) => option.name}
+              value={tags}
+              onChange={(_, newValue) => setTags(newValue)}
+              filterOptions={(options, { inputValue }) => {
+                const searchTerm = inputValue.toLowerCase();
+                return options.filter((option) =>
+                  option.name.toLowerCase().includes(searchTerm)
+                );
+              }}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Tags"
+                  placeholder="Search and select tags..."
+                  helperText="Type to search for tags"
+                />
+              )}
+              renderTags={(value, getTagProps) =>
+                value.map((option, index) => {
+                  const { key, ...chipProps } = getTagProps({ index });
+                  return (
+                    <Chip
+                      key={key}
+                      label={option.name}
+                      {...chipProps}
+                      sx={{ mr: 1, mb: 1 }}
+                    />
+                  );
+                })
+              }
+              renderOption={(props, option) => {
+                const { key, ...rest } = props;
+                return (
+                  <li key={key} {...rest}>
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Typography>{option.name}</Typography>
+                    </Box>
+                  </li>
+                );
+              }}
+              sx={{
+                '& .MuiAutocomplete-input': {
+                  color: 'text.primary',
+                },
+                '& .MuiInputLabel-root': {
+                  color: 'text.primary',
+                },
+                '& .MuiOutlinedInput-notchedOutline': {
+                  borderColor: 'rgba(255, 255, 255, 0.23)',
+                },
+                '&:hover .MuiOutlinedInput-notchedOutline': {
+                  borderColor: 'rgba(255, 255, 255, 0.5)',
+                },
+                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                  borderColor: 'primary.main',
+                },
+              }}
+            />
           </Box>
           <Button type="submit" variant="contained" color="primary">
             Create Post

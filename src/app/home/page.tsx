@@ -12,6 +12,10 @@ const HomePage = () => {
   const postsPerPage = 10;
   const [tags, setTags] = useState<{ id: number; name: string }[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [tagPage, setTagPage] = useState(1);
+  const tagsPerPage = 10;
+  const [tagFilter, setTagFilter] = useState("");
+  const [sortOption, setSortOption] = useState<'date' | 'likes'>('date');
 
   useEffect(() => {
     const fetchTags = async () => {
@@ -60,7 +64,15 @@ const HomePage = () => {
 
   const indexOfLastPost = currentPage * postsPerPage;
   const indexOfFirstPost = indexOfLastPost - postsPerPage;
-  const currentPosts = posts.slice(indexOfFirstPost, indexOfLastPost);
+  // Sort posts based on sortOption
+  const sortedPosts = [...posts].sort((a, b) => {
+    if (sortOption === 'date') {
+      return b.creationDate - a.creationDate;
+    } else {
+      return b.likes - a.likes;
+    }
+  });
+  const currentPosts = sortedPosts.slice(indexOfFirstPost, indexOfLastPost);
   const totalPages = Math.ceil(posts.length / postsPerPage);
 
   const handleTagClick = (tagName: string) => {
@@ -70,6 +82,16 @@ const HomePage = () => {
         : [...prev, tagName]
     );
   };
+
+  // Filter tags before paginating
+  const filteredTags = tags.filter(tag => tag.name.toLowerCase().includes(tagFilter.toLowerCase()));
+  const totalTagPages = Math.ceil(filteredTags.length / tagsPerPage);
+  const paginatedTags = filteredTags.slice((tagPage - 1) * tagsPerPage, tagPage * tagsPerPage);
+
+  // Reset tag page when filter changes
+  useEffect(() => {
+    setTagPage(1);
+  }, [tagFilter]);
 
   return (
     <div className="bg-dark min-vh-100">
@@ -90,8 +112,15 @@ const HomePage = () => {
         <div className="d-flex">
           <div style={{ minWidth: 180, marginRight: 24 }}>
             <h5 style={{ color: "#fff" }}>Tags</h5>
+            <input
+              type="text"
+              placeholder="Filter tags..."
+              value={tagFilter}
+              onChange={e => setTagFilter(e.target.value)}
+              style={{ width: '100%', marginBottom: 8, padding: 4, borderRadius: 4, border: '1px solid #444', background: '#222', color: '#fff' }}
+            />
             <div>
-              {tags.map(tag => (
+              {paginatedTags.map(tag => (
                 <div
                   key={tag.id}
                   style={{
@@ -109,6 +138,27 @@ const HomePage = () => {
                 </div>
               ))}
             </div>
+            <div className="d-flex justify-content-between align-items-center mt-2">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setTagPage((prev) => Math.max(prev - 1, 1))}
+                disabled={tagPage === 1}
+              >
+                Previous
+              </Button>
+              <span style={{ color: "#fff", fontSize: 12 }}>
+                Page {tagPage} of {totalTagPages}
+              </span>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setTagPage((prev) => Math.min(prev + 1, totalTagPages))}
+                disabled={tagPage === totalTagPages}
+              >
+                Next
+              </Button>
+            </div>
             {selectedTags.length > 0 && (
               <Button
                 variant="outline-light"
@@ -121,6 +171,18 @@ const HomePage = () => {
             )}
           </div>
           <div style={{ flex: 1 }}>
+            <div className="d-flex align-items-center mb-3">
+              <label htmlFor="sortPosts" style={{ color: '#fff', marginRight: 8 }}>Sort by:</label>
+              <select
+                id="sortPosts"
+                value={sortOption}
+                onChange={e => setSortOption(e.target.value as 'date' | 'likes')}
+                style={{ padding: '4px 8px', borderRadius: 4, border: '1px solid #444', background: '#222', color: '#fff' }}
+              >
+                <option value="date">Creation Date</option>
+                <option value="likes">Likes</option>
+              </select>
+            </div>
             {error && <Alert variant="danger">{error}</Alert>}
             <Row className="g-4">
               {currentPosts.map((post) => (
@@ -135,6 +197,9 @@ const HomePage = () => {
                         {post.tags.map((tag) => (
                           <Badge bg="info" key={tag.id} className="me-2">{tag.name}</Badge>
                         ))}
+                      </div>
+                      <div className="mt-2" style={{ fontWeight: 500, color: '#0dcaf0', fontSize: 16 }}>
+                        <span role="img" aria-label="like">👍</span> {post.likes} {post.likes === 1 ? 'Like' : 'Likes'}
                       </div>
                     </Card.Body>
                   </Card>

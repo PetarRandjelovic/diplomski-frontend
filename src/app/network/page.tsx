@@ -117,8 +117,7 @@ export default function NetworkPage() {
   };
 
   const handleViewProfile = (user: UserDto) => {
-    // For now, just alert the username. You can change this to navigate to a profile page later.
-    alert(`View account for ${user.username}`);
+    router.push(`/profile/${user.id}`);
   };
 
   const getButtonText = (user: UserDto) => {
