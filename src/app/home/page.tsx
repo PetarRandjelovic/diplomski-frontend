@@ -16,6 +16,9 @@ const HomePage = () => {
   const tagsPerPage = 10;
   const [tagFilter, setTagFilter] = useState("");
   const [sortOption, setSortOption] = useState<'date' | 'likes'>('date');
+  const [userSearch, setUserSearch] = useState("");
+  const [searchResults, setSearchResults] = useState<{ id: number; email: string; username: string; role: string }[]>([]);
+  const [showResults, setShowResults] = useState(false);
 
   useEffect(() => {
     const fetchTags = async () => {
@@ -53,6 +56,36 @@ const HomePage = () => {
     };
     fetchPosts();
   }, [selectedTags]);
+
+  // Add useEffect for user search
+  useEffect(() => {
+    const searchUsers = async () => {
+      if (userSearch.trim().length < 2) {
+        setSearchResults([]);
+        return;
+      }
+
+      try {
+        const token = localStorage.getItem("authToken");
+        const response = await fetch(
+          `http://localhost:8080/api/users/search/users?query=${encodeURIComponent(userSearch)}`,
+          {
+            headers: { Authorization: `Bearer ${token}` }
+          }
+        );
+        
+        if (response.ok) {
+          const data = await response.json();
+          setSearchResults(data);
+        }
+      } catch (err) {
+        console.error("Error searching users:", err);
+      }
+    };
+
+    const debounceTimer = setTimeout(searchUsers, 300);
+    return () => clearTimeout(debounceTimer);
+  }, [userSearch]);
 
   const handleHome = () => router.push('/home');
   const handleMyAccount = () => router.push('/edit-account');
@@ -93,12 +126,74 @@ const HomePage = () => {
     setTagPage(1);
   }, [tagFilter]);
 
+  const handleUserClick = (userId: number) => {
+    setUserSearch("");
+    setShowResults(false);
+    router.push(`/profile/${userId}`);
+  };
+
   return (
     <div className="bg-dark min-vh-100">
       <Navbar bg="dark" variant="dark" expand="md" className="mb-4 shadow">
         <Container>
           <Navbar.Brand className="fw-bold">My App</Navbar.Brand>
-          <Nav className="ms-auto">
+          <Nav className="ms-auto d-flex align-items-center">
+            <div className="position-relative me-3">
+              <input
+                type="text"
+                placeholder="Search users..."
+                value={userSearch}
+                onChange={(e) => {
+                  setUserSearch(e.target.value);
+                  setShowResults(true);
+                }}
+                onFocus={() => setShowResults(true)}
+                style={{
+                  padding: '4px 8px',
+                  borderRadius: 4,
+                  border: '1px solid #444',
+                  background: '#222',
+                  color: '#fff',
+                  width: '200px'
+                }}
+              />
+              {showResults && searchResults.length > 0 && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    right: 0,
+                    background: '#222',
+                    border: '1px solid #444',
+                    borderRadius: 4,
+                    marginTop: 4,
+                    maxHeight: '300px',
+                    overflowY: 'auto',
+                    zIndex: 1000
+                  }}
+                >
+                  {searchResults.map((user) => (
+                    <div
+                      key={user.id}
+                      onClick={() => handleUserClick(user.id)}
+                      style={{
+                        padding: '8px 12px',
+                        cursor: 'pointer',
+                        color: '#fff',
+                        borderBottom: '1px solid #444'
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = '#333'}
+                      onMouseLeave={(e) => e.currentTarget.style.background = '#222'}
+                    >
+                      <div style={{ fontWeight: 500 }}>{user.username}</div>
+                      <div style={{ fontSize: '0.8em', color: '#aaa' }}>{user.email}</div>
+                      <div style={{ fontSize: '0.8em', color: '#0dcaf0' }}>{user.role}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
             <Nav.Link onClick={handleHome}>Home</Nav.Link>
             <Nav.Link onClick={() => router.push('/my-account')}>My Account</Nav.Link>
             <Nav.Link onClick={handleExplore}>Explore</Nav.Link>
