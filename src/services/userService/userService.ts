@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:8080/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
 
 export interface UserDto {
     id: number;
@@ -44,6 +44,33 @@ export const userService = {
 
     async getFollowingList(email: string): Promise<UserRelationshipDto[]> {
         const response = await axios.get(`${API_URL}/relation/followed/${email}`);
+        return response.data;
+    },
+
+    async getFriends(userId: number): Promise<UserDto[]> {
+        const token = localStorage.getItem('authToken');
+        const response = await axios.get(`${API_URL}/users/friends/${userId}`, {
+            headers: { 
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`
+            }
+        });
+        return response.data;
+    },
+
+    async getRecommendations(email: string): Promise<UserDto[]> {
+        const token = localStorage.getItem('authToken');
+        const response = await axios.get(`${API_URL}/users/recommended/${email}`, {
+            headers: { 
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`
+            }
+        });
+        return response.data;
+    },
+
+    async getUserById(id: number): Promise<UserDto> {
+        const response = await axios.get(`${API_URL}/users/${id}`);
         return response.data;
     }
 }; 

@@ -2,9 +2,9 @@ import { Client, Message } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 
 export interface ChatMessage {
+  senderId: number;
+  receiverId: number;
   content: string;
-  senderEmail: string;
-  receiverEmail: string;
   timestamp?: string;
 }
 
@@ -57,20 +57,19 @@ class WebSocketService {
     this.onConnectCallbacks = [];
   }
 
-  public sendMessage(message: ChatMessage): void {
+  public sendMessage(message: any): void {
     this.client.publish({
-      destination: '/app/chat.sendMessage',
+      destination: '/app/chat.send',
       body: JSON.stringify(message),
     });
   }
 
   public addUser(userEmail: string): void {
     const message: ChatMessage = {
-      senderEmail: userEmail,
+      senderId: -1,
+      receiverId: -1,
       content: '',
-      receiverEmail: 'all'
     };
-    
     this.client.publish({
       destination: '/app/chat.addUser',
       body: JSON.stringify(message),

@@ -15,9 +15,9 @@ const LoginPage = () => {
     try {
       const response = await loginUser(email, password);
       if (response) {
+        console.log(response);
         localStorage.setItem('authToken', response.token);
         localStorage.setItem('userEmail', email);
-        console.log(localStorage);
         router.push('/home');
       }
     } catch (err) {
