@@ -37,6 +37,7 @@ const HomePage = () => {
 
   useEffect(() => {
     const fetchPosts = async () => {
+    
       try {
         const token = localStorage.getItem("authToken");
         let url = "http://localhost:8080/api/posts/all";
@@ -49,6 +50,7 @@ const HomePage = () => {
         const response = await fetch(url, options);
         if (!response.ok) throw new Error("Failed to fetch posts");
         const data: PostDto[] = await response.json();
+
         setPosts(data);
       } catch (err) {
         setError((err as Error).message);
@@ -113,6 +115,7 @@ const HomePage = () => {
       prev.includes(tagName)
         ? prev.filter(t => t !== tagName)
         : [...prev, tagName]
+
     );
   };
 
@@ -285,6 +288,32 @@ const HomePage = () => {
                   <Card bg="secondary" text="light" className="shadow-sm h-100" style={{ cursor: 'pointer' }} onClick={() => handlePostClick(post.id)}>
                     <Card.Body>
                       <Card.Title>{post.content}</Card.Title>
+                      {post.media && post.media.length > 0 && (
+                        <div className="mb-3">
+                 {post.media.map((media) => (
+  <div key={media.id} className="mb-2">
+    {media.type === 'VIDEO' ? (
+      <iframe
+        src={media.url}
+        title={media.title || 'Video'}
+        width="100%"
+        height="315"
+        frameBorder="0"
+        allowFullScreen
+        style={{ borderRadius: '8px', maxWidth: '560px' }}
+      />
+    ) : (
+      <img 
+        src={media.url} 
+        alt={media.title || 'Image'} 
+        style={{ maxWidth: '100%', maxHeight: '200px', borderRadius: '8px' }} 
+      />
+    )}
+    {media.title && <div className="text-light small mt-1">{media.title}</div>}
+  </div>
+))}
+                        </div>
+                      )}
                       <Card.Subtitle className="mb-2 text-light small">
                         Posted by: {post.userEmail} on {new Date(post.creationDate).toLocaleString()}
                       </Card.Subtitle>

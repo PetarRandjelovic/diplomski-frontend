@@ -1,4 +1,5 @@
 import { TagDto } from "./tagDto";
+import { MediaDto } from "./mediaDto";
 
 export interface PostDto {
     id: number;
@@ -7,4 +8,5 @@ export interface PostDto {
     tags: TagDto[];
     creationDate: number;
     likes: number;
+    media?: MediaDto[];
 }

@@ -181,6 +181,32 @@ const PostPage = () => {
             <Card.Subtitle className="mb-2 text-light small">
               Posted by: {post.userEmail} on {new Date(post.creationDate).toLocaleString()}
             </Card.Subtitle>
+            {post.media && post.media.length > 0 && (
+              <div className="mb-3">
+                {post.media.map((media) => (
+                  <div key={media.id} className="mb-2">
+                    {media.type === 'VIDEO' ? (
+                      <iframe
+                        src={media.url}
+                        title={media.title || 'Video'}
+                        width="100%"
+                        height="400"
+                        frameBorder="0"
+                        allowFullScreen
+                        style={{ borderRadius: '8px', maxWidth: '560px' }}
+                      />
+                    ) : (
+                      <img
+                        src={media.url}
+                        alt={media.title || 'Image'}
+                        style={{ maxWidth: '100%', maxHeight: '400px', borderRadius: '8px' }}
+                      />
+                    )}
+                    {media.title && <div className="text-light small mt-1">{media.title}</div>}
+                  </div>
+                ))}
+              </div>
+            )}
             <div className="mt-2 mb-2">
               {post.tags.map((tag) => (
                 <Badge bg="info" key={tag.id} className="me-2">{tag.name}</Badge>
