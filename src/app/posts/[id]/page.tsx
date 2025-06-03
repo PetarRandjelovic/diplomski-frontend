@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import { useRouter } from "next/navigation";
 import { Container, Row, Col, Card, Button, Alert, Badge, Navbar, Nav, Form, Spinner, ListGroup } from 'react-bootstrap';
 import { PostDto } from "../../dtos/postDto";
+import Post from "@/components/Post";
 
 interface Comment {
   id: number;
@@ -22,11 +23,12 @@ const PostPage = () => {
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [postLikes, setPostLikes] = useState(0);
   const [commentLikes, setCommentLikes] = useState<{ [key: number]: number }>({});
   const [hasLikedPost, setHasLikedPost] = useState(false);
   const [hasLikedComment, setHasLikedComment] = useState<{ [key: number]: boolean }>({});
   const [loading, setLoading] = useState(true);
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchPostAndComments = async () => {
@@ -39,11 +41,6 @@ const PostPage = () => {
         if (!postResponse.ok) throw new Error("Failed to fetch post");
         const postData = await postResponse.json();
         setPost(postData);
-        const postLikesResponse = await fetch(`http://localhost:8080/api/like/post/${params.id}`);
-        if (postLikesResponse.ok) {
-          const likesCount = await postLikesResponse.json();
-          setPostLikes(typeof likesCount === 'number' ? likesCount : likesCount.count);
-        }
         const likedPostRes = await fetch(`http://localhost:8080/api/like/post/${params.id}/liked?email=${email}`);
         if (likedPostRes.ok) setHasLikedPost(await likedPostRes.json());
         const commentsResponse = await fetch(`http://localhost:8080/api/comments/commentsByPostId/${params.id}`, {
@@ -77,6 +74,12 @@ const PostPage = () => {
     };
     fetchPostAndComments();
   }, [params.id]);
+
+  useEffect(() => {
+    const role = localStorage.getItem('role');
+    setUserRole(role);
+    setUserEmail(localStorage.getItem('userEmail'));
+  }, []);
 
   const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -115,8 +118,8 @@ const PostPage = () => {
       },
       body: JSON.stringify({ postId: Number(params.id), email }),
     });
-    if (response.ok) {
-      setPostLikes(hasLikedPost ? postLikes - 1 : postLikes + 1);
+    if (response.ok && post) {
+      setPost({ ...post, likes: hasLikedPost ? post.likes - 1 : post.likes + 1 });
       setHasLikedPost(!hasLikedPost);
     }
   };
@@ -140,6 +143,27 @@ const PostPage = () => {
         ...prev,
         [commentId]: !prev[commentId]
       }));
+    }
+  };
+
+  const handleDeletePost = async () => {
+    if (!window.confirm('Are you sure you want to delete this post?')) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('authToken');
+      const res = await fetch(`http://localhost:8080/api/posts/delete/${params.id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (!res.ok) throw new Error('Failed to delete post');
+
+      // Redirect to home page after successful deletion
+      router.push('/home');
+    } catch (err) {
+      setError((err as Error).message);
     }
   };
 
@@ -175,51 +199,13 @@ const PostPage = () => {
         </Container>
       </Navbar>
       <Container>
-        <Card bg="secondary" text="light" className="mb-4 shadow-sm">
-          <Card.Body>
-            <Card.Title>{post.content}</Card.Title>
-            <Card.Subtitle className="mb-2 text-light small">
-              Posted by: {post.userEmail} on {new Date(post.creationDate).toLocaleString()}
-            </Card.Subtitle>
-            {post.media && post.media.length > 0 && (
-              <div className="mb-3">
-                {post.media.map((media) => (
-                  <div key={media.id} className="mb-2">
-                    {media.type === 'VIDEO' ? (
-                      <iframe
-                        src={media.url}
-                        title={media.title || 'Video'}
-                        width="100%"
-                        height="400"
-                        frameBorder="0"
-                        allowFullScreen
-                        style={{ borderRadius: '8px', maxWidth: '560px' }}
-                      />
-                    ) : (
-                      <img
-                        src={media.url}
-                        alt={media.title || 'Image'}
-                        style={{ maxWidth: '100%', maxHeight: '400px', borderRadius: '8px' }}
-                      />
-                    )}
-                    {media.title && <div className="text-light small mt-1">{media.title}</div>}
-                  </div>
-                ))}
-              </div>
-            )}
-            <div className="mt-2 mb-2">
-              {post.tags.map((tag) => (
-                <Badge bg="info" key={tag.id} className="me-2">{tag.name}</Badge>
-              ))}
-            </div>
-            <div className="d-flex align-items-center gap-2 mb-2">
-              <Button variant={hasLikedPost ? "success" : "outline-light"} size="sm" onClick={handleLikePost}>
-                <span role="img" aria-label="like">👍</span> {hasLikedPost ? "Unlike" : "Like"}
-              </Button>
-              <span className="text-light">{postLikes} {postLikes === 1 ? 'Like' : 'Likes'}</span>
-            </div>
-          </Card.Body>
-        </Card>
+        {post && (
+          <Post
+            post={post}
+            onDelete={(userRole === 'ADMIN' || userRole === 'ROLE_ADMIN' || userEmail === post.userEmail) ? () => handleDeletePost() : undefined}
+            showDelete={userRole === 'ADMIN' || userRole === 'ROLE_ADMIN' || userEmail === post.userEmail}
+          />
+        )}
         <h5 className="text-light mb-3">Comments</h5>
         <Form onSubmit={handleSubmitComment} className="mb-4">
           <Form.Group className="mb-2">

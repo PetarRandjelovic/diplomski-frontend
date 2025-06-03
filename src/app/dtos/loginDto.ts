@@ -9,5 +9,6 @@ export interface LoginRequest  {
       id: number;
       name: string;
       email: string;
+      role: string;
     };
   }

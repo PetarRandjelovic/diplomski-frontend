@@ -2,16 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-
-interface Post {
-  id: number;
-  title: string;
-  content: string;
-  creationDate: number;
-}
+import { PostDto } from '../dtos/postDto';
+import Post from "@/components/Post";
 
 export default function MyAccount() {
-  const [posts, setPosts] = useState<Post[]>([]);
+  const [posts, setPosts] = useState<PostDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [profilePicture, setProfilePicture] = useState<string | null>(null);
@@ -81,6 +76,7 @@ export default function MyAccount() {
         });
         if (!res.ok) throw new Error('Failed to fetch posts');
         const data = await res.json();
+        console.log(data);
         setPosts(data);
       } catch (err) {
         setError('Could not load your posts.');
@@ -93,6 +89,24 @@ export default function MyAccount() {
 
   const handlePostClick = (postId: number) => {
     router.push(`/posts/${postId}`);
+  };
+
+  const handleDeletePost = async (postId: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!window.confirm('Are you sure you want to delete this post?')) {
+      return;
+    }
+    try {
+      const token = localStorage.getItem('authToken');
+      const res = await fetch(`http://localhost:8080/api/posts/delete/${postId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error('Failed to delete post');
+      setPosts(posts.filter(post => post.id !== postId));
+    } catch (err) {
+      alert('Failed to delete post');
+    }
   };
 
   if (loading) return <div style={{ color: '#fff', textAlign: 'center', marginTop: 40 }}>Loading...</div>;
@@ -177,26 +191,13 @@ export default function MyAccount() {
         <div style={{ textAlign: 'center' }}>You have not created any posts yet.</div>
       ) : (
         posts.map(post => (
-          <div
-            key={post.id}
-            style={{
-              background: '#444',
-              borderRadius: 8,
-              padding: 20,
-              marginBottom: 20,
-              cursor: 'pointer',
-              transition: 'background 0.2s',
-            }}
-            onClick={() => handlePostClick(post.id)}
-            onMouseOver={e => (e.currentTarget.style.background = '#555')}
-            onMouseOut={e => (e.currentTarget.style.background = '#444')}
-            title="Click to view comments"
-          >
-            <h4>{post.title}</h4>
-            <div style={{ color: '#bbb', fontSize: 14, marginBottom: 8 }}>
-              {new Date(post.creationDate).toLocaleString()}
-            </div>
-            <div>{post.content}</div>
+          <div key={post.id} style={{ marginBottom: 16 }}>
+            <Post
+              post={post}
+              onDelete={handleDeletePost}
+              onClick={() => handlePostClick(post.id)}
+              showDelete={true}
+            />
           </div>
         ))
       )}

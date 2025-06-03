@@ -6,15 +6,13 @@ import { ThemeProvider } from "@mui/material/styles";
 import { AppBar, Toolbar, Typography, Container, Box, Button, TextField, Chip, Autocomplete } from "@mui/material";
 import darkTheme from "@/themes/darkTheme";
 import { TagDto } from "@/app/dtos/tagDto";
-import { MediaDto } from "@/app/dtos/mediaDto";
 
 const CreatePostPage = () => {
   const [content, setContent] = useState("");
   const [tags, setTags] = useState<TagDto[]>([]);
   const [availableTags, setAvailableTags] = useState<TagDto[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [mediaFiles, setMediaFiles] = useState<File[]>([]);
-  const [mediaTitles, setMediaTitles] = useState<{ [key: string]: string }>({});
+  const [mediaItems, setMediaItems] = useState<{ url: string; title: string }[]>([]);
   const router = useRouter();
 
   useEffect(() => {
@@ -31,33 +29,18 @@ const CreatePostPage = () => {
     fetchTags();
   }, []);
 
-  const handleMediaUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const newFiles = Array.from(e.target.files);
-      setMediaFiles(prev => [...prev, ...newFiles]);
-      newFiles.forEach(file => {
-        setMediaTitles(prev => ({
-          ...prev,
-          [file.name]: file.name
-        }));
-      });
-    }
+  const addMediaItem = () => {
+    setMediaItems([...mediaItems, { url: "", title: "" }]);
   };
 
-  const handleMediaTitleChange = (fileName: string, title: string) => {
-    setMediaTitles(prev => ({
-      ...prev,
-      [fileName]: title
-    }));
+  const updateMediaItem = (index: number, field: "url" | "title", value: string) => {
+    const newMediaItems = [...mediaItems];
+    newMediaItems[index] = { ...newMediaItems[index], [field]: value };
+    setMediaItems(newMediaItems);
   };
 
-  const removeMedia = (fileName: string) => {
-    setMediaFiles(prev => prev.filter(file => file.name !== fileName));
-    setMediaTitles(prev => {
-      const newTitles = { ...prev };
-      delete newTitles[fileName];
-      return newTitles;
-    });
+  const removeMediaItem = (index: number) => {
+    setMediaItems(mediaItems.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -71,44 +54,25 @@ const CreatePostPage = () => {
     try {
       const token = localStorage.getItem("authToken");
       
-      // First create the post
+      const postData = {
+        userEmail,
+        content,
+        tags: tags.map((tag) => ({ name: tag.name })),
+        creationDate: Date.now(),
+        media: mediaItems
+      };
+
       const postResponse = await fetch("http://localhost:8080/api/posts/create", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          userEmail,
-          content,
-          tags: tags.map((tag) => ({ id: tag.id, name: tag.name })),
-          creationDate: Date.now(),
-        }),
+        body: JSON.stringify(postData),
       });
 
       if (!postResponse.ok) throw new Error("Failed to create post");
-      const postData = await postResponse.json();
-
-      // Then upload media files if any
-      if (mediaFiles.length > 0) {
-        for (const file of mediaFiles) {
-          const formData = new FormData();
-          formData.append('file', file);
-          formData.append('postId', postData.id.toString());
-          formData.append('title', mediaTitles[file.name] || file.name);
-
-          const mediaResponse = await fetch("http://localhost:8080/api/media/upload", {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-            body: formData,
-          });
-
-          if (!mediaResponse.ok) throw new Error("Failed to upload media");
-        }
-      }
-
+      
       router.push("/home");
     } catch (err) {
       setError((err as Error).message);
@@ -143,49 +107,42 @@ const CreatePostPage = () => {
           />
           
           <Box sx={{ mb: 2 }}>
-            <input
-              accept="image/*"
-              style={{ display: 'none' }}
-              id="media-upload"
-              type="file"
-              multiple
-              onChange={handleMediaUpload}
-            />
-            <label htmlFor="media-upload">
-              <Button variant="outlined" component="span" sx={{ mb: 2 }}>
-                Upload Media
-              </Button>
-            </label>
+            <Button 
+              variant="outlined" 
+              onClick={addMediaItem} 
+              sx={{ mb: 2 }}
+            >
+              Add Media URL
+            </Button>
             
-            {mediaFiles.length > 0 && (
-              <Box sx={{ mt: 2 }}>
-                {mediaFiles.map((file) => (
-                  <Box key={file.name} sx={{ mb: 2, p: 2, border: '1px solid rgba(255, 255, 255, 0.23)', borderRadius: 1 }}>
-                    <img
-                      src={URL.createObjectURL(file)}
-                      alt={file.name}
-                      style={{ maxWidth: '100%', maxHeight: '200px', marginBottom: '8px' }}
-                    />
-                    <TextField
-                      fullWidth
-                      size="small"
-                      label="Media Title"
-                      value={mediaTitles[file.name] || ''}
-                      onChange={(e) => handleMediaTitleChange(file.name, e.target.value)}
-                      sx={{ mb: 1 }}
-                    />
-                    <Button
-                      variant="outlined"
-                      color="error"
-                      size="small"
-                      onClick={() => removeMedia(file.name)}
-                    >
-                      Remove
-                    </Button>
-                  </Box>
-                ))}
+            {mediaItems.map((item, index) => (
+              <Box key={index} sx={{ mb: 2, p: 2, border: '1px solid rgba(255, 255, 255, 0.23)', borderRadius: 1 }}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Media URL"
+                  value={item.url}
+                  onChange={(e) => updateMediaItem(index, "url", e.target.value)}
+                  sx={{ mb: 1 }}
+                />
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Media Title"
+                  value={item.title}
+                  onChange={(e) => updateMediaItem(index, "title", e.target.value)}
+                  sx={{ mb: 1 }}
+                />
+                <Button
+                  variant="outlined"
+                  color="error"
+                  size="small"
+                  onClick={() => removeMediaItem(index)}
+                >
+                  Remove
+                </Button>
               </Box>
-            )}
+            ))}
           </Box>
 
           <Autocomplete

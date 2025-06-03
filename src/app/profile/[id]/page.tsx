@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Post from "@/components/Post";
 
 interface UserDto {
   id: number;
@@ -103,25 +104,8 @@ export default function UserProfilePage() {
           <div style={{ color: '#bbb' }}>No posts yet.</div>
         ) : (
           posts.map((post: any) => (
-            <div
-              key={post.id}
-              style={{ background: '#222', borderRadius: 8, padding: 16, marginBottom: 16, cursor: 'pointer', transition: 'background 0.2s' }}
-              onClick={() => router.push(`/posts/${post.id}`)}
-              onMouseOver={e => (e.currentTarget.style.background = '#333')}
-              onMouseOut={e => (e.currentTarget.style.background = '#222')}
-              title="Click to view post"
-            >
-              <div style={{ fontWeight: 600 }}>{post.content}</div>
-              <div style={{ color: '#bbb', fontSize: 14, marginBottom: 8 }}>
-                {new Date(post.creationDate).toLocaleString()}
-              </div>
-              <div>
-                {post.tags && post.tags.map((tag: any) => (
-                  <span key={tag.id} style={{ background: '#0dcaf0', color: '#222', borderRadius: 4, padding: '2px 8px', marginRight: 6, fontSize: 12 }}>
-                    {tag.name}
-                  </span>
-                ))}
-              </div>
+            <div key={post.id} style={{ marginBottom: 16 }}>
+              <Post post={post} onClick={() => router.push(`/posts/${post.id}`)} />
             </div>
           ))
         )}

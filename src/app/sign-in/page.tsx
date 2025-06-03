@@ -18,6 +18,17 @@ const LoginPage = () => {
         console.log(response);
         localStorage.setItem('authToken', response.token);
         localStorage.setItem('userEmail', email);
+        
+        // Decode JWT token to get role
+        const tokenParts = response.token.split('.');
+        if (tokenParts.length === 3) {
+          const payload = JSON.parse(atob(tokenParts[1]));
+          const role = payload.role || payload.authorities?.[0];
+          if (role) {
+            localStorage.setItem('role', role);
+          }
+        }
+        
         router.push('/home');
       }
     } catch (err) {

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { PostDto } from "../dtos/postDto";
 import { useRouter } from "next/navigation";
 import { Container, Row, Col, Card, Button, Alert, Badge, Navbar, Nav } from 'react-bootstrap';
+import Post from "@/components/Post";
 
 const HomePage = () => {
   const [posts, setPosts] = useState<PostDto[]>([]);
@@ -19,6 +20,14 @@ const HomePage = () => {
   const [userSearch, setUserSearch] = useState("");
   const [searchResults, setSearchResults] = useState<{ id: number; email: string; username: string; role: string }[]>([]);
   const [showResults, setShowResults] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
+
+  useEffect(() => {
+
+    const role = localStorage.getItem('role');
+    console.log(role);
+    setUserRole(role);
+  }, []);
 
   useEffect(() => {
     const fetchTags = async () => {
@@ -133,6 +142,24 @@ const HomePage = () => {
     setUserSearch("");
     setShowResults(false);
     router.push(`/profile/${userId}`);
+  };
+
+  const handleDeletePost = async (postId: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!window.confirm('Are you sure you want to delete this post?')) {
+      return;
+    }
+    try {
+      const token = localStorage.getItem('authToken');
+      const res = await fetch(`http://localhost:8080/api/posts/delete/${postId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error('Failed to delete post');
+      setPosts(posts.filter(post => post.id !== postId));
+    } catch (err) {
+      alert('Failed to delete post');
+    }
   };
 
   return (
@@ -285,48 +312,12 @@ const HomePage = () => {
             <Row className="g-4">
               {currentPosts.map((post) => (
                 <Col key={post.id} md={12}>
-                  <Card bg="secondary" text="light" className="shadow-sm h-100" style={{ cursor: 'pointer' }} onClick={() => handlePostClick(post.id)}>
-                    <Card.Body>
-                      <Card.Title>{post.content}</Card.Title>
-                      {post.media && post.media.length > 0 && (
-                        <div className="mb-3">
-                 {post.media.map((media) => (
-  <div key={media.id} className="mb-2">
-    {media.type === 'VIDEO' ? (
-      <iframe
-        src={media.url}
-        title={media.title || 'Video'}
-        width="100%"
-        height="315"
-        frameBorder="0"
-        allowFullScreen
-        style={{ borderRadius: '8px', maxWidth: '560px' }}
-      />
-    ) : (
-      <img 
-        src={media.url} 
-        alt={media.title || 'Image'} 
-        style={{ maxWidth: '100%', maxHeight: '200px', borderRadius: '8px' }} 
-      />
-    )}
-    {media.title && <div className="text-light small mt-1">{media.title}</div>}
-  </div>
-))}
-                        </div>
-                      )}
-                      <Card.Subtitle className="mb-2 text-light small">
-                        Posted by: {post.userEmail} on {new Date(post.creationDate).toLocaleString()}
-                      </Card.Subtitle>
-                      <div className="mt-2">
-                        {post.tags.map((tag) => (
-                          <Badge bg="info" key={tag.id} className="me-2">{tag.name}</Badge>
-                        ))}
-                      </div>
-                      <div className="mt-2" style={{ fontWeight: 500, color: '#0dcaf0', fontSize: 16 }}>
-                        <span role="img" aria-label="like">👍</span> {post.likes} {post.likes === 1 ? 'Like' : 'Likes'}
-                      </div>
-                    </Card.Body>
-                  </Card>
+                  <Post
+                    post={post}
+                    onDelete={userRole === 'ROLE_ADMIN' ? handleDeletePost : undefined}
+                    onClick={handlePostClick}
+                    showDelete={userRole === 'ROLE_ADMIN'}
+                  />
                 </Col>
               ))}
             </Row>
