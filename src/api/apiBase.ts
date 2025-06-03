@@ -6,7 +6,12 @@ function getAuthHeaders() {
 }
 
 function buildHeaders(extra: Record<string, string> = {}) {
-  return { ...getAuthHeaders(), ...extra } as Record<string, string>;
+  const headers = new Headers();
+  const authHeaders = getAuthHeaders();
+  Object.entries({ ...authHeaders, ...extra }).forEach(([key, value]) => {
+    if (value) headers.append(key, value);
+  });
+  return headers;
 }
 
 export async function apiGet<T>(url: string): Promise<T> {

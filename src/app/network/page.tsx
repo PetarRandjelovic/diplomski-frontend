@@ -1,6 +1,14 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { getRecommendations } from "@/api/apiUserRoutes";
+import {
+  getRelationshipStatus,
+  getIncomingFriendRequests,
+  sendFriendRequest,
+  answerFriendRequest,
+  UserRelationshipRecord,
+} from "@/api/apiRelationRoutes";
 
 interface UserDto {
   id: number;
@@ -11,12 +19,6 @@ interface UserDto {
 }
 
 type RelationshipStatus = 'CONFIRMED' | 'DECLINED' | 'WAITING' | 'NEUTRAL' | null;
-
-interface UserRelationshipRecord {
-  user1: string;
-  user2: string;
-  status: RelationshipStatus;
-}
 
 export default function NetworkPage() {
   const [users, setUsers] = useState<UserDto[]>([]);
@@ -34,27 +36,13 @@ export default function NetworkPage() {
       try {
         const userEmail = localStorage.getItem("userEmail");
         if (!userEmail) throw new Error("Not logged in");
-        
-        const res = await fetch(`http://localhost:8080/api/users/recommended/${userEmail}`, {
-          headers: { "Content-Type": "application/json" },
-        });
-        if (!res.ok) throw new Error("Failed to fetch recommended users");
-        const data = await res.json();
+        const data = await getRecommendations(userEmail);
         setUsers(data);
-
         // Fetch relationship status for each user
         const statuses: Record<string, RelationshipStatus> = {};
         for (const user of data) {
-          const statusRes = await fetch(
-            `http://localhost:8080/api/relation/relationship-status/${userEmail}/${user.email}`,
-            {
-              headers: { "Content-Type": "application/json" },
-            }
-          );
-          if (statusRes.ok) {
-            const record: UserRelationshipRecord = await statusRes.json();
-            statuses[user.email] = record.status;
-          }
+          const record = await getRelationshipStatus(userEmail, user.email);
+          statuses[user.email] = record.status as RelationshipStatus;
         }
         setRelationshipStatuses(statuses);
       } catch (err) {
@@ -72,11 +60,8 @@ export default function NetworkPage() {
       const userEmail = localStorage.getItem("userEmail");
       if (!userEmail) return;
       try {
-        const res = await fetch(`http://localhost:8080/api/relation/incoming/${userEmail}`);
-        if (res.ok) {
-          const data: UserRelationshipRecord[] = await res.json();
-          setIncomingRequests(data);
-        }
+        const data = await getIncomingFriendRequests(userEmail);
+        setIncomingRequests(data);
       } catch (err) {
         // Optionally handle error
       }
@@ -90,24 +75,11 @@ export default function NetworkPage() {
     try {
       const myEmail = localStorage.getItem("userEmail");
       if (!myEmail) throw new Error("Not logged in");
-      const payload = {
-        emailSender: myEmail,
-        emailReceiver: user.email,
-      };
-      const res = await fetch(
-        "http://localhost:8080/api/relation/create-request",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        }
-      );
-      if (!res.ok) throw new Error("Failed to send request");
+      await sendFriendRequest(myEmail, user.email);
       setSuccess(`Friend request sent to ${user.username}`);
-      // Update relationship status after sending request
       setRelationshipStatuses(prev => ({
         ...prev,
-        [user.email]: 'WAITING'
+        [user.email]: 'WAITING',
       }));
     } catch (err) {
       setError("Failed to send friend request.");
@@ -136,17 +108,12 @@ export default function NetworkPage() {
 
   const handleAnswerRequest = async (emailSender: string, emailReceiver: string, status: boolean) => {
     try {
-      const res = await fetch("http://localhost:8080/api/relation/confirm-decline", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ emailSender, emailReceiver, status }),
-      });
-      if (res.ok) {
-        setIncomingRequests((prev) =>
-          prev.filter((req) => !(req.user1 === emailSender && req.user2 === emailReceiver))
-        );
-        // Optionally, refresh relationshipStatuses here
-      }
+      console.log(localStorage.getItem("authToken"))
+      await answerFriendRequest(emailSender, emailReceiver, status);
+      setIncomingRequests((prev) =>
+        prev.filter((req) => !(req.user1 === emailSender && req.user2 === emailReceiver))
+      );
+      // Optionally, refresh relationshipStatuses here
     } catch (err) {
       // handle error
     }

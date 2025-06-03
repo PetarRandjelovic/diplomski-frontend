@@ -24,4 +24,12 @@ export function getUserFriendsCount(email: string): Promise<number> {
   return apiGet(`/relation/user-friends/${encodeURIComponent(email)}`);
 }
 
+export function getFriends(userId: number): Promise<UserDto[]> {
+  return apiGet(`/users/friends/${userId}`);
+}
+
+export function getRecommendations(email: string): Promise<UserDto[]> {
+  return apiGet(`/users/recommended/${encodeURIComponent(email)}`);
+}
+
 // Add more user-related API functions as needed 

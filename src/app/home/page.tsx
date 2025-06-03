@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Container, Row, Col, Card, Button, Alert, Badge, Navbar, Nav } from 'react-bootstrap';
 import Post from "@/components/Post";
 import { getAllPosts, getPostsByTags, deletePost } from "@/api/apiPostRoutes";
+import { getAllTags } from "@/api/apiTagRoutes";
 
 const HomePage = () => {
   const [posts, setPosts] = useState<PostDto[]>([]);
@@ -33,11 +34,8 @@ const HomePage = () => {
   useEffect(() => {
     const fetchTags = async () => {
       try {
-        const res = await fetch("http://localhost:8080/api/tags/all");
-        if (res.ok) {
-          const data = await res.json();
-          setTags(data);
-        }
+        const data = await getAllTags();
+        setTags(data);
       } catch (err) {
         // Optionally handle error
       }

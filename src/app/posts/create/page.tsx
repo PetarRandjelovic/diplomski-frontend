@@ -6,6 +6,7 @@ import { ThemeProvider } from "@mui/material/styles";
 import { AppBar, Toolbar, Typography, Container, Box, Button, TextField, Chip, Autocomplete } from "@mui/material";
 import darkTheme from "@/themes/darkTheme";
 import { TagDto } from "@/app/dtos/tagDto";
+import { getAllTags } from "@/api/apiTagRoutes";
 
 const CreatePostPage = () => {
   const [content, setContent] = useState("");
@@ -18,9 +19,7 @@ const CreatePostPage = () => {
   useEffect(() => {
     const fetchTags = async () => {
       try {
-        const response = await fetch("http://localhost:8080/api/tags/all");
-        if (!response.ok) throw new Error("Failed to fetch tags");
-        const data = await response.json();
+        const data = await getAllTags();
         setAvailableTags(data);
       } catch (err) {
         setError((err as Error).message);
