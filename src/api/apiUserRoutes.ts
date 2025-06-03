@@ -1,12 +1,5 @@
 import { apiGet, apiPost, apiPut } from "./apiBase";
-
-export interface UserDto {
-  id: number;
-  dateOfBirth: number;
-  email: string;
-  username: string;
-  role: string;
-}
+import { UserDto } from "@/app/dtos/userDto";
 
 export function getUserById(id: number): Promise<UserDto> {
   return apiGet(`/users/${id}`);

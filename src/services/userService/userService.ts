@@ -1,14 +1,7 @@
 import axios from 'axios';
+import { UserDto } from "@/app/dtos/userDto";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
-
-export interface UserDto {
-    id: number;
-    dateOfBirth: number;
-    email: string;
-    username: string;
-    role: string;
-}
 
 export interface UserRelationshipDto {
     id: number;

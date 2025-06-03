@@ -9,14 +9,7 @@ import {
   answerFriendRequest,
   UserRelationshipRecord,
 } from "@/api/apiRelationRoutes";
-
-interface UserDto {
-  id: number;
-  dateOfBirth: number;
-  email: string;
-  username: string;
-  role: string;
-}
+import { UserDto } from "@/app/dtos/userDto";
 
 type RelationshipStatus = 'CONFIRMED' | 'DECLINED' | 'WAITING' | 'NEUTRAL' | null;
 

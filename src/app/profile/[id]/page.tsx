@@ -3,14 +3,8 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Post from "@/components/Post";
 import { getUserById } from "@/api/apiUserRoutes";
-
-interface UserDto {
-  id: number;
-  dateOfBirth: number;
-  email: string;
-  username: string;
-  role: string;
-}
+import { UserDto } from "@/app/dtos/userDto";
+import { PostDto } from "@/app/dtos/postDto";
 
 export default function UserProfilePage() {
   const params = useParams();
@@ -20,7 +14,7 @@ export default function UserProfilePage() {
   const [profilePicture, setProfilePicture] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [posts, setPosts] = useState([]);
+  const [posts, setPosts] = useState<PostDto[]>([]);
   const router = useRouter();
 
   useEffect(() => {
@@ -76,6 +70,7 @@ export default function UserProfilePage() {
   if (loading) return <div style={{ color: '#fff', textAlign: 'center', marginTop: 40 }}>Loading...</div>;
   if (error) return <div style={{ color: 'red', textAlign: 'center', marginTop: 40 }}>{error}</div>;
   if (!user) return <div style={{ color: '#fff', textAlign: 'center', marginTop: 40 }}>User not found.</div>;
+
 
   return (
     <div style={{ maxWidth: 600, margin: '2rem auto', color: '#fff' }}>

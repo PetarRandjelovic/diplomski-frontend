@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Container, Row, Col, Card, Button, Alert, Badge, Navbar, Nav, Form, Spinner, ListGroup } from 'react-bootstrap';
 import { PostDto } from "../../dtos/postDto";
 import Post from "@/components/Post";
+import { getCommentsByPostId } from "@/api/apiCommentRoutes";
 
 interface Comment {
   id: number;
@@ -43,11 +44,7 @@ const PostPage = () => {
         setPost(postData);
         const likedPostRes = await fetch(`http://localhost:8080/api/like/post/${params.id}/liked?email=${email}`);
         if (likedPostRes.ok) setHasLikedPost(await likedPostRes.json());
-        const commentsResponse = await fetch(`http://localhost:8080/api/comments/commentsByPostId/${params.id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!commentsResponse.ok) throw new Error("Failed to fetch comments");
-        const commentsData = await commentsResponse.json();
+        const commentsData = await getCommentsByPostId(Number(params.id));
         setComments(commentsData);
         const likesMap: { [key: number]: number } = {};
         const likedCommentsMap: { [key: number]: boolean } = {};

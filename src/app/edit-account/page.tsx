@@ -2,14 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { getUserByEmail, updateUser, getUserFriendsCount } from "@/api/apiUserRoutes";
 import { Card, Form, Button, Spinner, Alert, Container, Row, Col } from 'react-bootstrap';
-
-interface UserDto {
-  id: number;
-  dateOfBirth: number;
-  email: string;
-  username: string;
-  role: string;
-}
+import { UserDto } from "@/app/dtos/userDto";
 
 const MyAccount: React.FC = () => {
     const [user, setUser] = useState<UserDto | null>(null);

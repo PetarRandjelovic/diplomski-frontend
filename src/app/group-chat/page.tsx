@@ -1,8 +1,9 @@
 "use client";
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { userService, UserDto } from '../../services/userService/userService';
+import { userService } from '../../services/userService/userService';
 import axios from 'axios';
+import { UserDto } from '../dtos/userDto';
 
 const API_URL = "http://localhost:8080/api";
 

@@ -1,9 +1,10 @@
 "use client";
 import { useEffect, useState, useRef } from 'react';
 import { useParams } from 'next/navigation';
-import { userService, UserDto } from '../../../services/userService/userService';
+import { userService } from '../../../services/userService/userService';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
+import { getUserById } from '@/api/apiUserRoutes';
 
 interface GroupMessageDTO {
   groupId: number;
@@ -24,6 +25,7 @@ export default function GroupChatConversationPage() {
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const stompClientRef = useRef<Client | null>(null);
+  const [userMap, setUserMap] = useState<{ [id: number]: string }>({});
 
   useEffect(() => {
     const storedEmail = localStorage.getItem('userEmail');
@@ -37,6 +39,8 @@ export default function GroupChatConversationPage() {
     try {
       const userData = await userService.getUserByEmail(email);
       setUserId(userData.id);
+      setUserEmail(userData.email);
+      console.log(userData);
     } catch (err) {
       setError('Failed to fetch user data.');
     }
@@ -87,6 +91,28 @@ export default function GroupChatConversationPage() {
     // eslint-disable-next-line
   }, [userId, groupId]);
 
+  // Fetch user emails for all unique senderIds in messages
+  useEffect(() => {
+    const uniqueSenderIds = Array.from(new Set(messages.map(m => m.senderId)));
+    const idsToFetch = uniqueSenderIds.filter(id => !(id in userMap));
+    if (idsToFetch.length === 0) return;
+
+    const fetchEmails = async () => {
+      const newMap: { [id: number]: string } = {};
+      await Promise.all(idsToFetch.map(async (id) => {
+        try {
+          const user = await getUserById(id);
+          newMap[id] = user.email;
+        } catch (e) {
+          // handle error
+        }
+      }));
+      setUserMap(prev => ({ ...prev, ...newMap }));
+    };
+
+    fetchEmails();
+  }, [messages]);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -129,7 +155,7 @@ export default function GroupChatConversationPage() {
             >
               <div className="flex items-center mb-1">
                 <span className="text-xs font-semibold opacity-80">
-                  {message.senderId === userId ? userEmail : `User ${message.senderId}`}
+                  {userMap[message.senderId] || `User ${message.senderId}`}
                 </span>
               </div>
               <div className="text-base mb-1 break-words">{message.content}</div>
