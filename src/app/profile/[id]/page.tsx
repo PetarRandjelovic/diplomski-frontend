@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Post from "@/components/Post";
+import { getUserById } from "@/api/apiUserRoutes";
 
 interface UserDto {
   id: number;
@@ -31,16 +32,11 @@ export default function UserProfilePage() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const token = localStorage.getItem('authToken');
-        const userRes = await fetch(`http://localhost:8080/api/users/${encodeURIComponent(id)}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        if (!userRes.ok) throw new Error("User not found");
-        const userData = await userRes.json();
+        const userData = await getUserById(Number(id)) as UserDto;
         setUser(userData);
-
-        // Fetch profile picture using the user's ID
+        // Fetch profile picture if needed
         if (userData.id) {
+          const token = localStorage.getItem('authToken');
           const picRes = await fetch(`http://localhost:8080/api/profiles/id/${userData.id}`, {
             headers: { Authorization: `Bearer ${token}` }
           });

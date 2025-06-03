@@ -4,6 +4,7 @@ import { PostDto } from "../dtos/postDto";
 import { useRouter } from "next/navigation";
 import { Container, Row, Col, Card, Button, Alert, Badge, Navbar, Nav } from 'react-bootstrap';
 import Post from "@/components/Post";
+import { getAllPosts, getPostsByTags, deletePost } from "@/api/apiPostRoutes";
 
 const HomePage = () => {
   const [posts, setPosts] = useState<PostDto[]>([]);
@@ -46,20 +47,13 @@ const HomePage = () => {
 
   useEffect(() => {
     const fetchPosts = async () => {
-    
       try {
-        const token = localStorage.getItem("authToken");
-        let url = "http://localhost:8080/api/posts/all";
-        let options: any = {
-          headers: { Authorization: `Bearer ${token}` },
-        };
+        let data: PostDto[];
         if (selectedTags.length > 0) {
-          url = `http://localhost:8080/api/posts/tags?${selectedTags.map(tag => `tags=${encodeURIComponent(tag)}`).join('&')}`;
+          data = await getPostsByTags(selectedTags) as PostDto[];
+        } else {
+          data = await getAllPosts() as PostDto[];
         }
-        const response = await fetch(url, options);
-        if (!response.ok) throw new Error("Failed to fetch posts");
-        const data: PostDto[] = await response.json();
-
         setPosts(data);
       } catch (err) {
         setError((err as Error).message);
@@ -150,12 +144,7 @@ const HomePage = () => {
       return;
     }
     try {
-      const token = localStorage.getItem('authToken');
-      const res = await fetch(`http://localhost:8080/api/posts/delete/${postId}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (!res.ok) throw new Error('Failed to delete post');
+      await deletePost(postId);
       setPosts(posts.filter(post => post.id !== postId));
     } catch (err) {
       alert('Failed to delete post');

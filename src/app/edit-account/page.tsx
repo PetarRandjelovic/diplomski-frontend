@@ -1,8 +1,16 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import { userService, UserDto } from '../../services/userService/userService';
+import { getUserByEmail, updateUser, getUserFriendsCount } from "@/api/apiUserRoutes";
 import { Card, Form, Button, Spinner, Alert, Container, Row, Col } from 'react-bootstrap';
-     console.log('localStorage', localStorage);
+
+interface UserDto {
+  id: number;
+  dateOfBirth: number;
+  email: string;
+  username: string;
+  role: string;
+}
+
 const MyAccount: React.FC = () => {
     const [user, setUser] = useState<UserDto | null>(null);
     const [newUsername, setNewUsername] = useState('');
@@ -18,11 +26,11 @@ const MyAccount: React.FC = () => {
                 if (!email) {
                     throw new Error('User email not found');
                 }
-                const userData = await userService.getUserByEmail(email);
+                const userData = (await getUserByEmail(email)) as UserDto;
                 setUser(userData);
                 setNewUsername(userData.username);
-                const friends = await userService.getUserFriendsCount(email);
-                setFriendsCount(friends);
+                const friends = await getUserFriendsCount(email);
+                setFriendsCount(Number(friends));
             } catch (err) {
                 setError('Failed to load user data');
                 console.error(err);
@@ -38,10 +46,7 @@ const MyAccount: React.FC = () => {
         if (!user) return;
         try {
             setLoading(true);
-            const updatedUser = await userService.updateUsername({
-                ...user,
-                username: newUsername
-            });
+            const updatedUser = await updateUser({ ...user, username: newUsername });
             setUser(updatedUser);
             setError(null);
         } catch (err) {

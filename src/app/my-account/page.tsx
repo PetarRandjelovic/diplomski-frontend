@@ -76,7 +76,6 @@ export default function MyAccount() {
         });
         if (!res.ok) throw new Error('Failed to fetch posts');
         const data = await res.json();
-        console.log(data);
         setPosts(data);
       } catch (err) {
         setError('Could not load your posts.');
