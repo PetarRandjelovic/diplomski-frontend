@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { useRouter } from "next/navigation";
-import { Container, Row, Col, Card, Button, Alert, Badge, Navbar, Nav, Form, Spinner, ListGroup } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Alert, Badge, Nav, Form, Spinner, ListGroup } from 'react-bootstrap';
 import { PostDto } from "../../dtos/postDto";
 import Post from "@/components/Post";
 import { getCommentsByPostId } from "@/api/apiCommentRoutes";
@@ -164,6 +164,21 @@ const PostPage = () => {
     }
   };
 
+  const handleDeleteComment = async (commentId: number) => {
+    if (!window.confirm('Are you sure you want to delete this comment?')) return;
+    try {
+      const token = localStorage.getItem("authToken");
+      const res = await fetch(`http://localhost:8080/api/comments/delete/${commentId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error('Failed to delete comment');
+      setComments(prev => prev.filter(comment => comment.id !== commentId));
+    } catch (err) {
+      setError((err as Error).message);
+    }
+  };
+
   if (loading) {
     return (
       <div className="d-flex justify-content-center align-items-center min-vh-100 bg-dark">
@@ -184,17 +199,6 @@ const PostPage = () => {
 
   return (
     <div className="bg-dark min-vh-100">
-      <Navbar bg="dark" variant="dark" expand="md" className="mb-4 shadow">
-        <Container>
-          <Navbar.Brand className="fw-bold">My App</Navbar.Brand>
-          <Nav className="ms-auto">
-            <Nav.Link onClick={handleHome}>Home</Nav.Link>
-            <Nav.Link onClick={() => router.push('/my-account')}>My Account</Nav.Link>
-            <Nav.Link onClick={handleExplore}>Explore</Nav.Link>
-            <Nav.Link onClick={handleChat}>Chat</Nav.Link>
-          </Nav>
-        </Container>
-      </Navbar>
       <Container>
         {post && (
           <Post
@@ -230,6 +234,15 @@ const PostPage = () => {
                   <span role="img" aria-label="like">👍</span> {hasLikedComment[comment.id] ? "Unlike" : "Like"}
                 </Button>
                 <span className="text-light">{commentLikes[comment.id] || 0} {(commentLikes[comment.id] === 1 ? 'Like' : 'Likes')}</span>
+                {(comment.email === userEmail || userRole === 'ADMIN' || userRole === 'ROLE_ADMIN') && (
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    onClick={() => handleDeleteComment(comment.id)}
+                  >
+                    Delete
+                  </Button>
+                )}
               </div>
             </ListGroup.Item>
           ))}
