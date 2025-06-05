@@ -1,7 +1,6 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import { getUserByEmail, updateUser, getUserFriendsCount } from "@/api/apiUserRoutes";
-import { Card, Form, Button, Spinner, Alert, Container, Row, Col } from 'react-bootstrap';
 import { UserDto } from "@/app/dtos/userDto";
 
 const MyAccount: React.FC = () => {
@@ -12,7 +11,6 @@ const MyAccount: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-   
         const fetchUserData = async () => {
             try {
                 const email = localStorage.getItem('userEmail');
@@ -26,7 +24,6 @@ const MyAccount: React.FC = () => {
                 setFriendsCount(Number(friends));
             } catch (err) {
                 setError('Failed to load user data');
-                console.error(err);
             } finally {
                 setLoading(false);
             }
@@ -44,7 +41,6 @@ const MyAccount: React.FC = () => {
             setError(null);
         } catch (err) {
             setError('Failed to update username');
-            console.error(err);
         } finally {
             setLoading(false);
         }
@@ -52,53 +48,45 @@ const MyAccount: React.FC = () => {
 
     if (loading) {
         return (
-            <div className="d-flex justify-content-center align-items-center min-vh-100 bg-dark">
-                <Spinner animation="border" variant="light" />
+            <div className="flex justify-center items-center min-h-screen bg-gray-900">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
             </div>
         );
     }
 
     if (error) {
         return (
-            <div className="d-flex justify-content-center align-items-center min-vh-100 bg-dark">
-                <Alert variant="danger">{error}</Alert>
+            <div className="flex justify-center items-center min-h-screen bg-gray-900">
+                <div className="bg-red-600 text-white p-4 rounded shadow">{error}</div>
             </div>
         );
     }
 
     return (
-        <div className="d-flex justify-content-center align-items-center min-vh-100 bg-dark">
-            <Card bg="dark" text="light" style={{ minWidth: 400, width: '100%', maxWidth: 600 }} className="shadow p-4">
-                <Card.Body>
-                    <h2 className="mb-4 text-center">My Account</h2>
-                    <Form onSubmit={handleUpdateUsername}>
-                        <Form.Group className="mb-3" controlId="formEmail">
-                            <Form.Label>Email</Form.Label>
-                            <Form.Control type="email" value={user?.email || ''} disabled readOnly />
-                        </Form.Group>
-                        <Form.Group className="mb-4" controlId="formUsername">
-                            <Form.Label>Username</Form.Label>
-                            <Form.Control
-                                type="text"
-                                value={newUsername}
-                                onChange={(e) => setNewUsername(e.target.value)}
-                                autoComplete="username"
-                            />
-                        </Form.Group>
-                        <Button variant="primary" type="submit" className="w-100 mb-3" disabled={loading || !newUsername.trim()}>
-                            Update Username
-                        </Button>
-                    </Form>
-                    <Row className="mt-4 text-center">
-                        <Col>
-                            <div className="bg-secondary rounded p-2">
-                                <div className="fw-bold">Friends</div>
-                                <div className="display-6">{friendsCount}</div>
-                            </div>
-                        </Col>
-                    </Row>
-                </Card.Body>
-            </Card>
+        <div className="flex justify-center items-center min-h-screen bg-gray-900">
+            <div className="card w-full max-w-lg p-6">
+                <h2 className="mb-4 text-center text-2xl font-bold">My Account</h2>
+                <form onSubmit={handleUpdateUsername}>
+                    <div className="mb-3">
+                        <label className="block mb-1">Email</label>
+                        <input type="email" value={user?.email || ''} disabled readOnly className="input" />
+                    </div>
+                    <div className="mb-4">
+                        <label className="block mb-1">Username</label>
+                        <input
+                            type="text"
+                            value={newUsername}
+                            onChange={(e) => setNewUsername(e.target.value)}
+                            autoComplete="username"
+                            className="input"
+                        />
+                    </div>
+                    <button type="submit" className="btn btn-primary w-full mb-3" disabled={loading || !newUsername.trim()}>
+                        Update Username
+                    </button>
+                </form>
+                <div className="mt-4 text-center text-gray-400">Friends: {friendsCount}</div>
+            </div>
         </div>
     );
 };

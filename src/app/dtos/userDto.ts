@@ -4,4 +4,5 @@ export interface UserDto {
   email: string;
   username: string;
   role: string;
+  profilePicture?: string;
 } 

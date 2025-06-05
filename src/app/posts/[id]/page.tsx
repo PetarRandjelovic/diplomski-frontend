@@ -3,15 +3,15 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { useRouter } from "next/navigation";
-import { Container, Row, Col, Card, Button, Alert, Badge, Nav, Form, Spinner, ListGroup } from 'react-bootstrap';
-import { PostDto } from "../../dtos/postDto";
 import Post from "@/components/Post";
 import { getCommentsByPostId } from "@/api/apiCommentRoutes";
+import { PostDto } from "../../dtos/postDto";
 
 interface Comment {
   id: number;
   content: string;
   email: string;
+  username?: string;
   userEmail?: string;
   creationDate?: number;
   postId?: number;
@@ -181,73 +181,85 @@ const PostPage = () => {
 
   if (loading) {
     return (
-      <div className="d-flex justify-content-center align-items-center min-vh-100 bg-dark">
-        <Spinner animation="border" variant="light" />
+      <div className="flex justify-center items-center min-h-screen bg-gray-900">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="d-flex justify-content-center align-items-center min-vh-100 bg-dark">
-        <Alert variant="danger">{error}</Alert>
+      <div className="flex justify-center items-center min-h-screen bg-gray-900">
+        <div className="bg-red-600 text-white p-4 rounded shadow">{error}</div>
       </div>
     );
   }
 
-  if (!post) return <div className="text-light text-center mt-5">Loading...</div>;
+  if (!post) return <div className="text-white text-center mt-5">Loading...</div>;
 
   return (
-    <div className="bg-dark min-vh-100">
-      <Container>
+    <div className="bg-gray-900 min-h-screen text-white">
+      <div className="container mx-auto py-8">
         {post && (
-          <Post
-            post={post}
-            onDelete={(userRole === 'ADMIN' || userRole === 'ROLE_ADMIN' || userEmail === post.userEmail) ? () => handleDeletePost() : undefined}
-            showDelete={userRole === 'ADMIN' || userRole === 'ROLE_ADMIN' || userEmail === post.userEmail}
-          />
-        )}
-        <h5 className="text-light mb-3">Comments</h5>
-        <Form onSubmit={handleSubmitComment} className="mb-4">
-          <Form.Group className="mb-2">
-            <Form.Control
-              as="textarea"
-              rows={3}
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              placeholder="Write a comment..."
+          <>
+            <Post
+              post={post}
+              onDelete={(userRole === 'ADMIN' || userRole === 'ROLE_ADMIN' || userEmail === post.userEmail) ? () => handleDeletePost() : undefined}
+              showDelete={userRole === 'ADMIN' || userRole === 'ROLE_ADMIN' || userEmail === post.userEmail}
             />
-          </Form.Group>
-          <Button type="submit" variant="primary" disabled={!newComment.trim()}>
+            <div className="flex items-center gap-3 mb-8">
+              <button
+                type="button"
+                className={`flex items-center gap-1 px-3 py-2 rounded text-base font-semibold transition ${hasLikedPost ? 'bg-primary-600 text-white' : 'bg-gray-700 text-primary-400 hover:bg-primary-700'}`}
+                onClick={handleLikePost}
+              >
+                <span>{hasLikedPost ? '👍' : '👍'}</span>
+                {hasLikedPost ? 'Unlike' : 'Like'}
+              </button>
+              <span className="text-gray-300 text-base">{post.likes} {post.likes === 1 ? 'Like' : 'Likes'}</span>
+            </div>
+          </>
+        )}
+        <h5 className="text-lg font-semibold mb-3 mt-8">Comments</h5>
+        <form onSubmit={handleSubmitComment} className="mb-4">
+          <textarea
+            rows={3}
+            value={newComment}
+            onChange={(e) => setNewComment(e.target.value)}
+            placeholder="Write a comment..."
+            className="input mb-2"
+          />
+          <button type="submit" className="btn btn-primary" disabled={!newComment.trim()}>
             Post Comment
-          </Button>
-        </Form>
-        <ListGroup variant="flush">
-          {comments.map((comment) => (
-            <ListGroup.Item key={comment.id} className="bg-dark text-light border-secondary">
-              <div className="fw-bold">{comment.content}</div>
-              <div className="small text-secondary mb-2">
-                Posted by: {comment.email} on {comment.creationDate ? new Date(comment.creationDate).toLocaleString() : ''}
-              </div>
-              <div className="d-flex align-items-center gap-2">
-                <Button variant={hasLikedComment[comment.id] ? "success" : "outline-light"} size="sm" onClick={() => handleLikeComment(comment.id)}>
-                  <span role="img" aria-label="like">👍</span> {hasLikedComment[comment.id] ? "Unlike" : "Like"}
-                </Button>
-                <span className="text-light">{commentLikes[comment.id] || 0} {(commentLikes[comment.id] === 1 ? 'Like' : 'Likes')}</span>
-                {(comment.email === userEmail || userRole === 'ADMIN' || userRole === 'ROLE_ADMIN') && (
-                  <Button
-                    variant="danger"
-                    size="sm"
-                    onClick={() => handleDeleteComment(comment.id)}
+          </button>
+        </form>
+        {comments.length === 0 ? (
+          <div className="text-gray-400 mt-4">No comments yet.</div>
+        ) : (
+          <div className="space-y-4 mt-4">
+            {comments.map(comment => (
+              <div key={comment.id} className="bg-gray-800 rounded-lg p-4 text-gray-100">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="font-semibold text-primary-400">{comment.username || comment.email}</span>
+                  <span className="text-xs text-gray-400">{comment.creationDate ? new Date(comment.creationDate).toLocaleString() : ''}</span>
+                </div>
+                <div className="mb-2">{comment.content}</div>
+                <div className="flex items-center gap-3 mt-2">
+                  <button
+                    type="button"
+                    className={`flex items-center gap-1 px-2 py-1 rounded text-sm font-semibold transition ${hasLikedComment[comment.id] ? 'bg-primary-600 text-white' : 'bg-gray-700 text-primary-400 hover:bg-primary-700'}`}
+                    onClick={() => handleLikeComment(comment.id)}
                   >
-                    Delete
-                  </Button>
-                )}
+                    <span>{hasLikedComment[comment.id] ? '👍' : '👍'}</span>
+                    {hasLikedComment[comment.id] ? 'Unlike' : 'Like'}
+                  </button>
+                  <span className="text-gray-300 text-sm">{commentLikes[comment.id] || 0} {commentLikes[comment.id] === 1 ? 'Like' : 'Likes'}</span>
+                </div>
               </div>
-            </ListGroup.Item>
-          ))}
-        </ListGroup>
-      </Container>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

@@ -2,7 +2,6 @@
 import { useEffect, useState } from "react";
 import { PostDto } from "../dtos/postDto";
 import { useRouter } from "next/navigation";
-import { Container, Row, Col, Card, Button, Alert, Badge, Navbar, Nav } from 'react-bootstrap';
 import Post from "@/components/Post";
 import { getAllPosts, getPostsByTags, deletePost } from "@/api/apiPostRoutes";
 import { getAllTags } from "@/api/apiTagRoutes";
@@ -19,15 +18,10 @@ const HomePage = () => {
   const tagsPerPage = 10;
   const [tagFilter, setTagFilter] = useState("");
   const [sortOption, setSortOption] = useState<'date' | 'likes'>('date');
-  const [userSearch, setUserSearch] = useState("");
-  const [searchResults, setSearchResults] = useState<{ id: number; email: string; username: string; role: string }[]>([]);
-  const [showResults, setShowResults] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
 
   useEffect(() => {
-
     const role = localStorage.getItem('role');
-    console.log(role);
     setUserRole(role);
   }, []);
 
@@ -36,9 +30,7 @@ const HomePage = () => {
       try {
         const data = await getAllTags();
         setTags(data);
-      } catch (err) {
-        // Optionally handle error
-      }
+      } catch (err) {}
     };
     fetchTags();
   }, []);
@@ -59,36 +51,6 @@ const HomePage = () => {
     };
     fetchPosts();
   }, [selectedTags]);
-
-  // Add useEffect for user search
-  useEffect(() => {
-    const searchUsers = async () => {
-      if (userSearch.trim().length < 2) {
-        setSearchResults([]);
-        return;
-      }
-
-      try {
-        const token = localStorage.getItem("authToken");
-        const response = await fetch(
-          `http://localhost:8080/api/users/search/users?query=${encodeURIComponent(userSearch)}`,
-          {
-            headers: { Authorization: `Bearer ${token}` }
-          }
-        );
-        
-        if (response.ok) {
-          const data = await response.json();
-          setSearchResults(data);
-        }
-      } catch (err) {
-        console.error("Error searching users:", err);
-      }
-    };
-
-    const debounceTimer = setTimeout(searchUsers, 300);
-    return () => clearTimeout(debounceTimer);
-  }, [userSearch]);
 
   const handleHome = () => router.push('/home');
   const handleMyAccount = () => router.push('/edit-account');
@@ -130,12 +92,6 @@ const HomePage = () => {
     setTagPage(1);
   }, [tagFilter]);
 
-  const handleUserClick = (userId: number) => {
-    setUserSearch("");
-    setShowResults(false);
-    router.push(`/profile/${userId}`);
-  };
-
   const handleDeletePost = async (postId: number, e: React.MouseEvent) => {
     e.stopPropagation();
     if (!window.confirm('Are you sure you want to delete this post?')) {
@@ -150,31 +106,23 @@ const HomePage = () => {
   };
 
   return (
-    <div className="bg-dark min-vh-100">
-      <Container>
-        <div className="d-flex">
-          <div style={{ minWidth: 180, marginRight: 24 }}>
-            <h5 style={{ color: "#fff" }}>Tags</h5>
+    <div className="bg-gray-900 min-h-screen text-white">
+      <div className="container mx-auto py-8">
+        <div className="flex flex-col md:flex-row gap-8">
+          <div className="min-w-[180px] md:mr-6 mb-6 md:mb-0">
+            <h5 className="text-lg font-semibold mb-2">Tags</h5>
             <input
               type="text"
               placeholder="Filter tags..."
               value={tagFilter}
               onChange={e => setTagFilter(e.target.value)}
-              style={{ width: '100%', marginBottom: 8, padding: 4, borderRadius: 4, border: '1px solid #444', background: '#222', color: '#fff' }}
+              className="input mb-2 text-gray-900 placeholder-gray-700"
             />
-            <div>
+            <div className="space-y-2">
               {paginatedTags.map(tag => (
                 <div
                   key={tag.id}
-                  style={{
-                    cursor: "pointer",
-                    background: selectedTags.includes(tag.name) ? "#0dcaf0" : "#222",
-                    color: selectedTags.includes(tag.name) ? "#222" : "#fff",
-                    borderRadius: 4,
-                    padding: "6px 12px",
-                    marginBottom: 6,
-                    fontWeight: selectedTags.includes(tag.name) ? 700 : 400,
-                  }}
+                  className={`cursor-pointer ${selectedTags.includes(tag.name) ? 'bg-blue-500 text-white' : 'bg-gray-700 text-gray-300'} px-2 py-1 rounded`}
                   onClick={() => handleTagClick(tag.name)}
                 >
                   {tag.name}
@@ -182,87 +130,82 @@ const HomePage = () => {
               ))}
             </div>
             <div className="d-flex justify-content-between align-items-center mt-2">
-              <Button
-                variant="secondary"
-                size="sm"
+              <button
+                className="text-gray-300 text-sm"
                 onClick={() => setTagPage((prev) => Math.max(prev - 1, 1))}
                 disabled={tagPage === 1}
               >
                 Previous
-              </Button>
-              <span style={{ color: "#fff", fontSize: 12 }}>
+              </button>
+              <span className="text-gray-300 text-sm">
                 Page {tagPage} of {totalTagPages}
               </span>
-              <Button
-                variant="secondary"
-                size="sm"
+              <button
+                className="text-gray-300 text-sm"
                 onClick={() => setTagPage((prev) => Math.min(prev + 1, totalTagPages))}
                 disabled={tagPage === totalTagPages}
               >
                 Next
-              </Button>
+              </button>
             </div>
             {selectedTags.length > 0 && (
-              <Button
-                variant="outline-light"
-                size="sm"
-                className="mt-2"
+              <button
+                className="text-gray-300 text-sm mt-2"
                 onClick={() => setSelectedTags([])}
               >
                 Clear Filter
-              </Button>
+              </button>
             )}
           </div>
-          <div style={{ flex: 1 }}>
+          <div className="flex-1">
             <div className="d-flex align-items-center mb-3">
-              <label htmlFor="sortPosts" style={{ color: '#fff', marginRight: 8 }}>Sort by:</label>
+              <label htmlFor="sortPosts" className="text-gray-300 mr-2">Sort by:</label>
               <select
                 id="sortPosts"
                 value={sortOption}
                 onChange={e => setSortOption(e.target.value as 'date' | 'likes')}
-                style={{ padding: '4px 8px', borderRadius: 4, border: '1px solid #444', background: '#222', color: '#fff' }}
+                className="text-gray-900 p-2 rounded bg-white w-48 text-base"
               >
                 <option value="date">Creation Date</option>
                 <option value="likes">Likes</option>
               </select>
             </div>
-            {error && <Alert variant="danger">{error}</Alert>}
-            <Row className="g-4">
+            {error && <div className="text-red-500 mb-4">{error}</div>}
+            <div className="flex flex-col gap-4">
               {currentPosts.map((post) => (
-                <Col key={post.id} md={12}>
+                <div key={post.id}>
                   <Post
                     post={post}
                     onDelete={userRole === 'ROLE_ADMIN' ? handleDeletePost : undefined}
                     onClick={handlePostClick}
                     showDelete={userRole === 'ROLE_ADMIN'}
+                    showLikes={true}
                   />
-                </Col>
+                </div>
               ))}
-            </Row>
-            <div className="d-flex justify-content-center align-items-center my-4">
-              <Button
-                variant="secondary"
-                className="me-2"
+            </div>
+            <div className="flex justify-center items-center my-4 gap-2">
+              <button
+                className="text-gray-300 mr-2"
                 onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
               >
                 Previous
-              </Button>
-              <span style={{ color: "#fff" }}>
+              </button>
+              <span className="text-gray-300">
                 Page {currentPage} of {totalPages}
               </span>
-              <Button
-                variant="secondary"
-                className="ms-2"
+              <button
+                className="text-gray-300 ms-2"
                 onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
                 disabled={currentPage === totalPages}
               >
                 Next
-              </Button>
+              </button>
             </div>
           </div>
         </div>
-      </Container>
+      </div>
     </div>
   );
 };

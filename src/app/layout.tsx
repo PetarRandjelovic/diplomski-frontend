@@ -1,13 +1,9 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
-import "./globals.css";
-import { AppRouterCacheProvider } from '@mui/material-nextjs/v15-appRouter';
-import { ReactElement, JSXElementConstructor, ReactNode, ReactPortal, AwaitedReactNode } from "react";
-import { Roboto } from 'next/font/google';
-import { ThemeProvider } from '@mui/material/styles';
-import theme from '../themes/lightTheme';
-import 'bootstrap/dist/css/bootstrap.min.css';
+import "../globals.css";
 import LayoutWithNavbar from "@/components/LayoutWithNavbar";
+
+import { Roboto } from 'next/font/google';
 
 const roboto = Roboto({
   weight: ['300', '400', '500', '700'],
@@ -40,13 +36,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${roboto.variable} ${geistSans.variable} ${geistMono.variable}`.trim()}>
-        <AppRouterCacheProvider>
-          <ThemeProvider theme={theme}>
-            <LayoutWithNavbar>
-              {children}
-            </LayoutWithNavbar>
-          </ThemeProvider>
-        </AppRouterCacheProvider>
+        <LayoutWithNavbar>
+          {children}
+        </LayoutWithNavbar>
       </body>
     </html>
   );

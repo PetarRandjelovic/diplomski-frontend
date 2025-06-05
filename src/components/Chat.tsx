@@ -8,6 +8,8 @@ interface ChatProps {
   userEmail: string;
   receiverId: number;
   receiverEmail: string;
+  userUsername?: string;
+  receiverUsername?: string;
 }
 
 interface ChatMessage {
@@ -17,7 +19,7 @@ interface ChatMessage {
   timestamp?: string;
 }
 
-export default function Chat({ userId, userEmail, receiverId, receiverEmail }: ChatProps) {
+export default function Chat({ userId, userEmail, receiverId, receiverEmail, userUsername, receiverUsername }: ChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -85,11 +87,6 @@ export default function Chat({ userId, userEmail, receiverId, receiverEmail }: C
 
   return (
     <div className="flex flex-col h-[80vh] max-w-2xl mx-auto bg-gray-800 rounded-lg shadow-lg border border-gray-700">
-      <div className="p-4 border-b border-gray-700 bg-gray-900 rounded-t-lg">
-        <h2 className="text-2xl font-bold text-white">
-          Chat with <span className="text-blue-400">{receiverEmail}</span>
-        </h2>
-      </div>
       <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-800">
         {messages
           .filter(
@@ -110,7 +107,7 @@ export default function Chat({ userId, userEmail, receiverId, receiverEmail }: C
               >
                 <div className="flex items-center mb-1">
                   <span className="text-xs font-semibold opacity-80">
-                    {message.senderId === userId ? userEmail : receiverEmail}
+                    {message.senderId === userId ? userUsername : receiverUsername}
                   </span>
                 </div>
                 <div className="text-base mb-1 break-words">{message.content}</div>

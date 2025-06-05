@@ -1,5 +1,4 @@
 import React from "react";
-import { Card, Button, Badge } from "react-bootstrap";
 import { PostDto } from "@/app/dtos/postDto";
 
 interface PostProps {
@@ -7,89 +6,89 @@ interface PostProps {
   onDelete?: (id: number, e: React.MouseEvent) => void;
   onClick?: (id: number) => void;
   showDelete?: boolean;
+  showLikes?: boolean;
 }
 
-const Post: React.FC<PostProps> = ({ post, onDelete, onClick, showDelete }) => (
-  <Card
-    bg="secondary"
-    text="light"
-    className="shadow-sm h-100"
-    style={{ cursor: onClick ? "pointer" : "default", position: "relative" }}
-    onClick={onClick ? () => onClick(post.id) : undefined}
-  >
-    {showDelete && onDelete && (
-      <Button
-        variant="danger"
-        size="sm"
-        style={{
-          position: "absolute",
-          top: 10,
-          right: 10,
-          zIndex: 1,
-        }}
-        onClick={(e) => {
-          e.stopPropagation();
-          onDelete(post.id, e);
-        }}
-      >
-        Delete
-      </Button>
-    )}
-    <Card.Body>
-      <Card.Title>{post.content}</Card.Title>
+const isImage = (url: string) => /\.(jpg|jpeg|png|gif|bmp|webp)$/i.test(url);
+const isVideo = (url: string) => /\.(mp4|webm|ogg)$/i.test(url);
+const isYouTube = (url: string) => {
+  return /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]+)/.test(url);
+};
+const getYouTubeId = (url: string) => {
+  // Support youtube.com/watch?v=, youtu.be/, youtube.com/embed/
+  const match = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([\w-]+)/);
+  return match ? match[1] : null;
+};
+
+const Post: React.FC<PostProps> = ({ post, onDelete, onClick, showDelete, showLikes }) => {
+  console.log(post);
+  return (
+    <div
+      className="bg-gray-800 text-gray-100 rounded-xl shadow-lg p-6 mb-4 transition hover:shadow-2xl cursor-pointer border border-gray-700"
+      onClick={onClick ? () => onClick(post.id) : undefined}
+    >
+      <div className="flex justify-between items-center mb-2">
+        <div className="font-bold text-lg text-primary-400">{post.username}</div>
+        {showDelete && (
+          <button
+            className="ml-2 px-3 py-1 rounded bg-red-600 text-white text-xs font-semibold hover:bg-red-700 transition"
+            onClick={e => {
+              e.stopPropagation();
+              onDelete && onDelete(post.id, e);
+            }}
+          >
+            Delete
+          </button>
+        )}
+      </div>
+      <div className="mb-1 text-xs text-gray-400">{new Date(post.creationDate).toLocaleString()}</div>
+      <div className="mb-3 text-base leading-relaxed break-words">
+        {post.content}
+      </div>
+      {/* Media rendering */}
       {post.media && post.media.length > 0 && (
-        <div className="mb-3">
-          {post.media.map((media) => (
-            <div key={media.id} className="mb-2">
-              {media.type === "VIDEO" ? (
-                <iframe
-                  src={media.url}
-                  title={media.title || "Video"}
-                  width="100%"
-                  height="315"
-                  frameBorder="0"
-                  allowFullScreen
-                  style={{ borderRadius: "8px", maxWidth: "560px" }}
-                />
-              ) : (
-                <img
-                  src={media.url}
-                  alt={media.title || "Image"}
-                  style={{
-                    maxWidth: "100%",
-                    maxHeight: "200px",
-                    borderRadius: "8px",
-                  }}
-                />
+        <div className="mb-3 flex flex-col gap-4">
+          {post.media.map((item, idx) => (
+            <div key={item.id || idx} className="flex flex-col items-start w-full">
+              {item.type === 'IMAGE' && (
+                <img src={item.url} alt={item.title || "media"} className="max-w-full max-h-64 rounded mb-1 border border-gray-700" />
               )}
-              {media.title && (
-                <div className="text-light small mt-1">{media.title}</div>
+              {item.type === 'VIDEO' && isYouTube(item.url) && getYouTubeId(item.url) && (
+                <div className="aspect-w-16 aspect-h-9 w-full">
+                  <iframe
+                    src={`https://www.youtube.com/embed/${getYouTubeId(item.url)}`}
+                    title={item.title || "YouTube video"}
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    className="rounded mb-1 border border-gray-700 w-full h-full"
+                  />
+                </div>
               )}
+              {item.type === 'VIDEO' && !isYouTube(item.url) && isVideo(item.url) && (
+                <video controls className="max-w-full max-h-64 rounded mb-1 border border-gray-700">
+                  <source src={item.url} />
+                  Your browser does not support the video tag.
+                </video>
+              )}
+              {item.title && <div className="text-xs text-gray-400 mt-1">{item.title}</div>}
             </div>
           ))}
         </div>
       )}
-      <Card.Subtitle className="mb-2 text-light small">
-        Posted by: {post.userEmail} on {new Date(post.creationDate).toLocaleString()}
-      </Card.Subtitle>
-      <div className="mt-2">
-        {post.tags.map((tag) => (
-          <Badge bg="info" key={tag.id} className="me-2">
-            {tag.name}
-          </Badge>
+      <div className="flex flex-wrap gap-2 mt-2 mb-2">
+        {post.tags && post.tags.map(tag => (
+          <span key={tag.id} className="bg-primary-600 text-white px-2 py-1 rounded text-xs font-semibold">{tag.name}</span>
         ))}
       </div>
-      <div
-        className="mt-2"
-        style={{ fontWeight: 500, color: "#0dcaf0", fontSize: 16 }}
-      >
-        <span role="img" aria-label="like">
-          👍
-        </span>{" "}
-        {post.likes} {post.likes === 1 ? "Like" : "Likes"}
-      </div>
-    </Card.Body>
-  </Card>
-);
+      {showLikes && (
+        <div className="flex items-center gap-2 mt-2">
+          <span className="text-primary-400 text-lg">👍</span>
+          <span className="font-semibold text-gray-200">{post.likes} {post.likes === 1 ? "Like" : "Likes"}</span>
+        </div>
+      )}
+    </div>
+  );
+};
 
 export default Post;

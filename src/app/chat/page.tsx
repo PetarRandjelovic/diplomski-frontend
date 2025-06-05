@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { userService, UserDto } from '../../services/userService/userService';
+import { userService } from '../../services/userService/userService';
+import { UserDto } from '@/app/dtos/userDto';
 
 export default function ChatListPage() {
   const [userEmail, setUserEmail] = useState('');
@@ -69,7 +70,7 @@ export default function ChatListPage() {
             <Link key={friend.id} href={`/chat/${friend.id}`} className="block">
               <div className="bg-gray-800 p-4 rounded-lg shadow-md cursor-pointer hover:bg-gray-700 transition text-white">
                 <h2 className="text-lg font-semibold">{friend.username}</h2>
-                <p className="text-gray-300">{friend.email}</p>
+                <p className="text-gray-300">{friend.username}</p>
               </div>
             </Link>
           ))}

@@ -4,6 +4,7 @@ import { MediaDto } from "./mediaDto";
 export interface PostDto {
   id: number;
   userEmail: string;
+  username?: string;
   content: string;
   tags: TagDto[];
   creationDate: number;

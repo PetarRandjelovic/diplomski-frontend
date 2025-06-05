@@ -2,9 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ThemeProvider } from "@mui/material/styles";
-import { AppBar, Toolbar, Typography, Container, Box, Button, TextField, Chip, Autocomplete } from "@mui/material";
-import darkTheme from "@/themes/darkTheme";
 import { TagDto } from "@/app/dtos/tagDto";
 import { getAllTags } from "@/api/apiTagRoutes";
 
@@ -42,6 +39,14 @@ const CreatePostPage = () => {
     setMediaItems(mediaItems.filter((_, i) => i !== index));
   };
 
+  const handleTagToggle = (tag: TagDto) => {
+    setTags(prev =>
+      prev.some(t => t.id === tag.id)
+        ? prev.filter(t => t.id !== tag.id)
+        : [...prev, tag]
+    );
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const userEmail = localStorage.getItem("userEmail");
@@ -52,7 +57,6 @@ const CreatePostPage = () => {
 
     try {
       const token = localStorage.getItem("authToken");
-      
       const postData = {
         userEmail,
         content,
@@ -60,7 +64,6 @@ const CreatePostPage = () => {
         creationDate: Date.now(),
         media: mediaItems
       };
-
       const postResponse = await fetch("http://localhost:8080/api/posts/create", {
         method: "POST",
         headers: {
@@ -69,9 +72,7 @@ const CreatePostPage = () => {
         },
         body: JSON.stringify(postData),
       });
-
       if (!postResponse.ok) throw new Error("Failed to create post");
-      
       router.push("/home");
     } catch (err) {
       setError((err as Error).message);
@@ -79,139 +80,61 @@ const CreatePostPage = () => {
   };
 
   return (
-    <ThemeProvider theme={darkTheme}>
-      <AppBar position="static" sx={{ mb: 4 }}>
-        <Toolbar>
-          <Typography variant="h6" sx={{ flexGrow: 1 }}>
-            My App
-          </Typography>
-          <Button color="inherit" onClick={() => router.push("/home")}>Home</Button>
-        </Toolbar>
-      </AppBar>
-      <Container maxWidth="sm" sx={{ color: "text.primary" }}>
-        <Typography variant="h5" gutterBottom>
-          Create a New Post
-        </Typography>
-        {error && <Typography color="error">{error}</Typography>}
-        <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
-          <TextField
-            label="Content"
+    <div className="min-h-screen bg-gray-900 flex items-center justify-center py-8">
+      <form onSubmit={handleSubmit} className="card w-full max-w-2xl p-8">
+        <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">Create a New Post</h2>
+        {error && <div className="bg-red-600 text-white p-2 rounded mb-4">{error}</div>}
+        <div className="mb-4">
+          <label className="block mb-1 text-gray-900 font-semibold">Content</label>
+          <textarea
+            className="input min-h-[100px]"
             value={content}
-            onChange={(e) => setContent(e.target.value)}
-            fullWidth
-            multiline
-            rows={4}
+            onChange={e => setContent(e.target.value)}
             required
-            sx={{ mb: 2 }}
+            placeholder="What's on your mind?"
           />
-          
-          <Box sx={{ mb: 2 }}>
-            <Button 
-              variant="outlined" 
-              onClick={addMediaItem} 
-              sx={{ mb: 2 }}
-            >
-              Add Media URL
-            </Button>
-            
-            {mediaItems.map((item, index) => (
-              <Box key={index} sx={{ mb: 2, p: 2, border: '1px solid rgba(255, 255, 255, 0.23)', borderRadius: 1 }}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="Media URL"
-                  value={item.url}
-                  onChange={(e) => updateMediaItem(index, "url", e.target.value)}
-                  sx={{ mb: 1 }}
-                />
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="Media Title"
-                  value={item.title}
-                  onChange={(e) => updateMediaItem(index, "title", e.target.value)}
-                  sx={{ mb: 1 }}
-                />
-                <Button
-                  variant="outlined"
-                  color="error"
-                  size="small"
-                  onClick={() => removeMediaItem(index)}
-                >
-                  Remove
-                </Button>
-              </Box>
+        </div>
+        <div className="mb-4">
+          <label className="block mb-1 text-gray-900 font-semibold">Tags</label>
+          <div className="flex flex-wrap gap-2">
+            {availableTags.map(tag => (
+              <button
+                type="button"
+                key={tag.id}
+                className={`px-3 py-1 rounded-full border text-sm font-semibold transition ${tags.some(t => t.id === tag.id) ? 'bg-primary-600 text-white border-primary-600' : 'bg-gray-200 text-gray-800 border-gray-300 hover:bg-primary-100'}`}
+                onClick={() => handleTagToggle(tag)}
+              >
+                {tag.name}
+              </button>
             ))}
-          </Box>
-
-          <Autocomplete
-            multiple
-            id="tags"
-            options={availableTags}
-            getOptionLabel={(option) => option.name}
-            value={tags}
-            onChange={(_, newValue) => setTags(newValue)}
-            filterOptions={(options, { inputValue }) => {
-              const searchTerm = inputValue.toLowerCase();
-              return options.filter((option) =>
-                option.name.toLowerCase().includes(searchTerm)
-              );
-            }}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label="Tags"
-                placeholder="Search and select tags..."
-                helperText="Type to search for tags"
+          </div>
+        </div>
+        <div className="mb-4">
+          <label className="block mb-1 text-gray-900 font-semibold">Media</label>
+          <button type="button" className="btn btn-secondary mb-2" onClick={addMediaItem}>Add Media URL</button>
+          {mediaItems.map((item, index) => (
+            <div key={index} className="mb-2 p-3 rounded bg-gray-100 flex flex-col gap-2">
+              <input
+                className="input"
+                placeholder="Media URL"
+                value={item.url}
+                onChange={e => updateMediaItem(index, "url", e.target.value)}
               />
-            )}
-            renderTags={(value, getTagProps) =>
-              value.map((option, index) => {
-                const { key, ...chipProps } = getTagProps({ index });
-                return (
-                  <Chip
-                    key={key}
-                    label={option.name}
-                    {...chipProps}
-                    sx={{ mr: 1, mb: 1 }}
-                  />
-                );
-              })
-            }
-            renderOption={(props, option) => {
-              const { key, ...rest } = props;
-              return (
-                <li key={key} {...rest}>
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <Typography>{option.name}</Typography>
-                  </Box>
-                </li>
-              );
-            }}
-            sx={{
-              '& .MuiAutocomplete-input': {
-                color: 'text.primary',
-              },
-              '& .MuiInputLabel-root': {
-                color: 'text.primary',
-              },
-              '& .MuiOutlinedInput-notchedOutline': {
-                borderColor: 'rgba(255, 255, 255, 0.23)',
-              },
-              '&:hover .MuiOutlinedInput-notchedOutline': {
-                borderColor: 'rgba(255, 255, 255, 0.5)',
-              },
-              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                borderColor: 'primary.main',
-              },
-            }}
-          />
-          <Button type="submit" variant="contained" color="primary" sx={{ mt: 2 }}>
-            Create Post
-          </Button>
-        </Box>
-      </Container>
-    </ThemeProvider>
+              <input
+                className="input"
+                placeholder="Media Title"
+                value={item.title}
+                onChange={e => updateMediaItem(index, "title", e.target.value)}
+              />
+              <button type="button" className="btn btn-secondary bg-red-600 text-white hover:bg-red-700" onClick={() => removeMediaItem(index)}>
+                Remove
+              </button>
+            </div>
+          ))}
+        </div>
+        <button type="submit" className="btn btn-primary w-full font-semibold mt-4">Create Post</button>
+      </form>
+    </div>
   );
 };
 

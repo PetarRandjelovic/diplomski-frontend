@@ -38,18 +38,35 @@ export default function SignUp() {
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{ maxWidth: 400, margin: '2rem auto', display: 'flex', flexDirection: 'column', gap: 12 }}>
-      <h2>Sign Up</h2>
-      {error && <div style={{ color: 'red' }}>{error}</div>}
-      <input name="username" placeholder="Username" value={form.username} onChange={handleChange} required />
-      <input name="email" type="email" placeholder="Email" value={form.email} onChange={handleChange} required />
-      <input name="dateOfBirth" type="date" value={form.dateOfBirth} onChange={handleChange} required />
-      <select name="role" value={form.role} onChange={handleChange}>
-        <option value="USER">User</option>
-        <option value="ADMIN">Admin</option>
-      </select>
-      <input name="password" type="password" placeholder="Password" value={form.password} onChange={handleChange} required />
-      <button type="submit">Create Account</button>
-    </form>
+    <div className="flex items-center justify-center min-h-screen bg-gray-900">
+      <form onSubmit={handleSubmit} className="card w-full max-w-md p-6">
+        <h2 className="mb-4 text-center text-2xl font-extrabold text-gray-900">Sign Up</h2>
+        {error && <div className="bg-red-600 text-white p-2 rounded mb-2">{error}</div>}
+        <div className="mb-3">
+          <label className="block mb-1 text-gray-900 font-semibold">Username</label>
+          <input name="username" placeholder="Username" value={form.username} onChange={handleChange} required className="input" />
+        </div>
+        <div className="mb-3">
+          <label className="block mb-1 text-gray-900 font-semibold">Email</label>
+          <input name="email" type="email" placeholder="Email" value={form.email} onChange={handleChange} required className="input" />
+        </div>
+        <div className="mb-3">
+          <label className="block mb-1 text-gray-900 font-semibold">Date of Birth</label>
+          <input name="dateOfBirth" type="date" value={form.dateOfBirth} onChange={handleChange} required className="input" />
+        </div>
+        <div className="mb-3">
+          <label className="block mb-1 text-gray-900 font-semibold">Role</label>
+          <select name="role" value={form.role} onChange={handleChange} className="input">
+            <option value="USER">User</option>
+            <option value="ADMIN">Admin</option>
+          </select>
+        </div>
+        <div className="mb-4">
+          <label className="block mb-1 text-gray-900 font-semibold">Password</label>
+          <input name="password" type="password" placeholder="Password" value={form.password} onChange={handleChange} required className="input" />
+        </div>
+        <button type="submit" className="btn btn-primary w-full font-semibold">Create Account</button>
+      </form>
+    </div>
   );
 } 

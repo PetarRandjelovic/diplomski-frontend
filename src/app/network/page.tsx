@@ -10,6 +10,7 @@ import {
   UserRelationshipRecord,
 } from "@/api/apiRelationRoutes";
 import { UserDto } from "@/app/dtos/userDto";
+import Image from "next/image";
 
 type RelationshipStatus = 'CONFIRMED' | 'DECLINED' | 'WAITING' | 'NEUTRAL' | null;
 
@@ -21,6 +22,7 @@ export default function NetworkPage() {
   const [success, setSuccess] = useState<string | null>(null);
   const [relationshipStatuses, setRelationshipStatuses] = useState<Record<string, RelationshipStatus>>({});
   const [incomingRequests, setIncomingRequests] = useState<UserRelationshipRecord[]>([]);
+  const [profilePictures, setProfilePictures] = useState<{ [id: number]: string }>({});
   const router = useRouter();
 
   useEffect(() => {
@@ -46,6 +48,31 @@ export default function NetworkPage() {
     };
     fetchUsers();
   }, []);
+
+  // Fetch profile pictures for users without profilePicture
+  useEffect(() => {
+    const fetchProfilePictures = async () => {
+      const usersWithoutPic = users.filter(
+        user => !user.profilePicture && !profilePictures[user.id]
+      );
+      for (const user of usersWithoutPic) {
+        try {
+          const res = await fetch(`http://localhost:8080/api/profiles/id/${user.id}`);
+          if (res.ok) {
+            const blob = await res.blob();
+            const url = URL.createObjectURL(blob);
+            setProfilePictures(prev => ({ ...prev, [user.id]: url }));
+          }
+        } catch (e) {
+          // Optionally handle error
+        }
+      }
+    };
+    if (users.length > 0) {
+      fetchProfilePictures();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [users]);
 
   // Fetch incoming friend requests
   useEffect(() => {
@@ -169,12 +196,24 @@ export default function NetworkPage() {
               justifyContent: "space-between",
             }}
           >
-            <div
-              style={{ cursor: "pointer" }}
-              onClick={() => handleViewProfile(user)}
-            >
-              <div style={{ fontWeight: 600 }}>{user.username}</div>
-              <div style={{ color: "#bbb", fontSize: 14 }}>{user.email}</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+              <div style={{ width: 48, height: 48, borderRadius: "50%", overflow: "hidden", background: "#222", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 600, fontSize: 22, color: "#bbb" }}>
+                {(user.profilePicture || profilePictures[user.id]) ? (
+                  <Image
+                    src={user.profilePicture || profilePictures[user.id]}
+                    alt={user.username + "'s profile"}
+                    width={48}
+                    height={48}
+                    style={{ objectFit: "cover" }}
+                  />
+                ) : (
+                  user.username.charAt(0).toUpperCase()
+                )}
+              </div>
+              <div style={{ cursor: "pointer" }} onClick={() => handleViewProfile(user)}>
+                <div style={{ fontWeight: 600 }}>{user.username}</div>
+                <div style={{ color: "#bbb", fontSize: 14 }}>{user.email}</div>
+              </div>
             </div>
             <button
               style={{
