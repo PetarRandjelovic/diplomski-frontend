@@ -11,6 +11,7 @@ export default function ChatConversationPage() {
   const userIdParam = Array.isArray(params.userId) ? params.userId[0] : params.userId;
 
   const [userEmail, setUserEmail] = useState('');
+  const [userUsername, setUserUsername] = useState('');
   const [userId, setUserId] = useState<number | null>(null);
   const [friend, setFriend] = useState<UserDto | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -36,6 +37,7 @@ export default function ChatConversationPage() {
     try {
       const userData = await userService.getUserByEmail(email);
       setUserId(userData.id);
+      setUserUsername(userData.username);
     } catch (err) {
       setError('Failed to fetch user data.');
     }
@@ -97,6 +99,8 @@ export default function ChatConversationPage() {
           userEmail={userEmail}
           receiverId={friend.id}
           receiverEmail={friend.email}
+          receiverUsername={friend.username}
+          userUsername={userUsername}
         />
       </div>
     </div>

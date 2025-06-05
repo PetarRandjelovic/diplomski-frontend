@@ -21,7 +21,6 @@ const getYouTubeId = (url: string) => {
 };
 
 const Post: React.FC<PostProps> = ({ post, onDelete, onClick, showDelete, showLikes }) => {
-  console.log(post);
   return (
     <div
       className="bg-gray-800 text-gray-100 rounded-xl shadow-lg p-6 mb-4 transition hover:shadow-2xl cursor-pointer border border-gray-700"

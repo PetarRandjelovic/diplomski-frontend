@@ -1,7 +1,9 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import { getUserByEmail, updateUser, getUserFriendsCount } from "@/api/apiUserRoutes";
+import { getUserByEmail, updateUser, getUserFriendsCount, deleteUserByEmail } from "@/api/apiUserRoutes";
 import { UserDto } from "@/app/dtos/userDto";
+import { useRouter } from 'next/navigation';
+
 
 const MyAccount: React.FC = () => {
     const [user, setUser] = useState<UserDto | null>(null);
@@ -9,6 +11,9 @@ const MyAccount: React.FC = () => {
     const [friendsCount, setFriendsCount] = useState(0);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [deleteLoading, setDeleteLoading] = useState(false);
+    const router = useRouter();
 
     useEffect(() => {
         const fetchUserData = async () => {
@@ -43,6 +48,25 @@ const MyAccount: React.FC = () => {
             setError('Failed to update username');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleDeleteAccount = async () => {
+        if (!user?.email) return;
+        
+        try {
+            setDeleteLoading(true);
+            await deleteUserByEmail(user.email);
+            
+            localStorage.removeItem('userEmail');
+            localStorage.removeItem('authToken'); 
+   
+            window.location.href = '/sign-in'; 
+        } catch (err) {
+            setError('Failed to delete account');
+            setShowDeleteConfirm(false);
+        } finally {
+            setDeleteLoading(false);
         }
     };
 
@@ -85,10 +109,46 @@ const MyAccount: React.FC = () => {
                         Update Username
                     </button>
                 </form>
+                
                 <div className="mt-4 text-center text-gray-400">Friends: {friendsCount}</div>
+                
+                {/* Delete Account Section */}
+                <div className="mt-6 pt-4 border-t border-gray-700">
+                    <h3 className="text-lg font-semibold text-red-400 mb-2">Danger Zone</h3>
+                    {!showDeleteConfirm ? (
+                        <button
+                            onClick={() => setShowDeleteConfirm(true)}
+                            className="btn bg-red-600 hover:bg-red-700 text-white w-full"
+                        >
+                            Delete Account
+                        </button>
+                    ) : (
+                        <div className="space-y-3">
+                            <p className="text-sm text-gray-300">
+                                Are you sure you want to delete your account? This action cannot be undone.
+                            </p>
+                            <div className="flex space-x-3">
+                                <button
+                                    onClick={handleDeleteAccount}
+                                    disabled={deleteLoading}
+                                    className="btn bg-red-600 hover:bg-red-700 text-white flex-1"
+                                >
+                                    {deleteLoading ? 'Deleting...' : 'Yes, Delete'}
+                                </button>
+                                <button
+                                    onClick={() => setShowDeleteConfirm(false)}
+                                    disabled={deleteLoading}
+                                    className="btn bg-gray-600 hover:bg-gray-700 text-white flex-1"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );
 };
 
-export default MyAccount; 
+export default MyAccount;

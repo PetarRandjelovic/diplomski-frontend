@@ -1,4 +1,4 @@
-import { apiGet, apiPost, apiPut } from "./apiBase";
+import { apiGet, apiPost, apiPut , apiDelete} from "./apiBase";
 import { UserDto } from "@/app/dtos/userDto";
 
 export function getUserById(id: number): Promise<UserDto> {
@@ -23,6 +23,10 @@ export function getFriends(userId: number): Promise<UserDto[]> {
 
 export function getRecommendations(email: string): Promise<UserDto[]> {
   return apiGet(`/users/recommended/${encodeURIComponent(email)}`);
+}
+
+export function deleteUserByEmail(email: string): Promise<any> {
+  return apiDelete(`/users/delete/${encodeURIComponent(email)}`);
 }
 
 // Add more user-related API functions as needed 

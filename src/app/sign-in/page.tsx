@@ -24,6 +24,7 @@ const LoginPage = () => {
             localStorage.setItem('role', role);
           }
         }
+  
         router.push('/home');
       }
     } catch (err) {

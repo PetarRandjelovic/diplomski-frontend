@@ -107,7 +107,7 @@ export default function Chat({ userId, userEmail, receiverId, receiverEmail, use
               >
                 <div className="flex items-center mb-1">
                   <span className="text-xs font-semibold opacity-80">
-                    {message.senderId === userId ? userUsername : receiverUsername}
+                    {message.senderId === userId ? userUsername : receiverEmail}
                   </span>
                 </div>
                 <div className="text-base mb-1 break-words">{message.content}</div>

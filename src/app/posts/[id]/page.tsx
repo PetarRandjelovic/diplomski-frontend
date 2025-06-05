@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Post from "@/components/Post";
 import { getCommentsByPostId } from "@/api/apiCommentRoutes";
 import { PostDto } from "../../dtos/postDto";
+import { getUserByEmail } from "@/api/apiUserRoutes"; 
 
 interface Comment {
   id: number;
@@ -30,6 +31,7 @@ const PostPage = () => {
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [userUsername, setUserUsername] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchPostAndComments = async () => {
@@ -71,6 +73,21 @@ const PostPage = () => {
     };
     fetchPostAndComments();
   }, [params.id]);
+
+  useEffect(() => {
+    const role = localStorage.getItem('role');
+    const email = localStorage.getItem('userEmail');
+  
+    setUserRole(role);
+    setUserEmail(email);
+  
+    if (email) {
+      getUserByEmail(email)
+        .then((user) => setUserUsername(user.username))
+        .catch((err) => console.error("Failed to fetch username", err));
+    }
+  }, []);
+  
 
   useEffect(() => {
     const role = localStorage.getItem('role');
@@ -179,6 +196,26 @@ const PostPage = () => {
     }
   };
 
+  // Function to check if user can delete a comment
+  const canDeleteComment = (comment: Comment): boolean => {
+    // Admin can delete any comment
+    if (userRole === 'ADMIN' || userRole === 'ROLE_ADMIN') {
+      return true;
+    }
+
+    console.log(post?.username, userUsername);
+    if(post?.username === userUsername){
+      return true;
+    }
+
+    // User can delete their own comment
+    if(userUsername === comment.username || userUsername === comment.username){
+      return true;
+    }
+
+    return false;
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-gray-900">
@@ -241,7 +278,18 @@ const PostPage = () => {
               <div key={comment.id} className="bg-gray-800 rounded-lg p-4 text-gray-100">
                 <div className="flex justify-between items-center mb-1">
                   <span className="font-semibold text-primary-400">{comment.username || comment.email}</span>
-                  <span className="text-xs text-gray-400">{comment.creationDate ? new Date(comment.creationDate).toLocaleString() : ''}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-400">{comment.creationDate ? new Date(comment.creationDate).toLocaleString() : ''}</span>
+                    {canDeleteComment(comment) && (
+                      <button
+                        onClick={() => handleDeleteComment(comment.id)}
+                          className="ml-2 px-3 py-1 rounded bg-red-600 text-white text-xs font-semibold hover:bg-red-700 transition"
+                        title="Delete comment"
+                      >
+                        Delete
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <div className="mb-2">{comment.content}</div>
                 <div className="flex items-center gap-3 mt-2">
@@ -264,4 +312,4 @@ const PostPage = () => {
   );
 };
 
-export default PostPage; 
+export default PostPage;
