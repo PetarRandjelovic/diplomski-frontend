@@ -4,9 +4,11 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { TagDto } from "@/app/dtos/tagDto";
 import { getAllTags } from "@/api/apiTagRoutes";
+import { getUserByEmail } from "@/api/apiUserRoutes";
 
 const CreatePostPage = () => {
   const [content, setContent] = useState("");
+  const [username, setUsername] = useState("");
   const [tags, setTags] = useState<TagDto[]>([]);
   const [availableTags, setAvailableTags] = useState<TagDto[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -39,6 +41,13 @@ const CreatePostPage = () => {
     setMediaItems(mediaItems.filter((_, i) => i !== index));
   };
 
+  useEffect(() => {
+    const userEmail = localStorage.getItem("userEmail");
+    if (userEmail) {
+      getUserByEmail(userEmail).then(user => setUsername(user.username));
+    }
+  }, []);
+
   const handleTagToggle = (tag: TagDto) => {
     setTags(prev =>
       prev.some(t => t.id === tag.id)
@@ -55,10 +64,16 @@ const CreatePostPage = () => {
       return;
     }
 
+
+
     try {
       const token = localStorage.getItem("authToken");
+      const user = await getUserByEmail(userEmail);
+      setUsername(user.username);
+      console.log(user.username);
+      console.log(username);7
       const postData = {
-        userEmail,
+        username,
         content,
         tags: tags.map((tag) => ({ name: tag.name })),
         creationDate: Date.now(),

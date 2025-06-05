@@ -21,6 +21,7 @@ const getYouTubeId = (url: string) => {
 };
 
 const Post: React.FC<PostProps> = ({ post, onDelete, onClick, showDelete, showLikes }) => {
+  console.log(post);
   return (
     <div
       className="bg-gray-800 text-gray-100 rounded-xl shadow-lg p-6 mb-4 transition hover:shadow-2xl cursor-pointer border border-gray-700"
@@ -54,7 +55,7 @@ const Post: React.FC<PostProps> = ({ post, onDelete, onClick, showDelete, showLi
               )}
               {item.type === 'VIDEO' && isYouTube(item.url) && getYouTubeId(item.url) && (
                 <div className="aspect-w-16 aspect-h-9 w-full">
-                  <iframe
+    <iframe
                     src={`https://www.youtube.com/embed/${getYouTubeId(item.url)}`}
                     title={item.title || "YouTube video"}
                     frameBorder="0"

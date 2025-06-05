@@ -19,6 +19,7 @@ export default function GroupChatConversationPage() {
   const groupId = Number(groupIdParam);
 
   const [userEmail, setUserEmail] = useState('');
+  const [userUsername, setUserUsername] = useState('');
   const [userId, setUserId] = useState<number | null>(null);
   const [messages, setMessages] = useState<GroupMessageDTO[]>([]);
   const [newMessage, setNewMessage] = useState('');
@@ -40,6 +41,7 @@ export default function GroupChatConversationPage() {
       const userData = await userService.getUserByEmail(email);
       setUserId(userData.id);
       setUserEmail(userData.email);
+      setUserUsername(userData.username);
       console.log(userData);
     } catch (err) {
       setError('Failed to fetch user data.');
@@ -102,7 +104,7 @@ export default function GroupChatConversationPage() {
       await Promise.all(idsToFetch.map(async (id) => {
         try {
           const user = await getUserById(id);
-          newMap[id] = user.email;
+          newMap[id] = user.username;
         } catch (e) {
           // handle error
         }
